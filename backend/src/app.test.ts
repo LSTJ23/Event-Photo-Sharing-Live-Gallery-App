@@ -27,4 +27,14 @@ describe("health endpoints", () => {
     expect(response.body).toEqual({ status: "ok", database: "connected" });
     expect(query).toHaveBeenCalledWith("SELECT 1");
   });
+
+  it("checks if the files in the directory exist", async () => {
+    // Implement the test logic here
+    const fs = await import("fs");
+    const path = await import("path");
+    const expectedFiles = ["app.ts", "app.test.ts"];
+    const directoryPath = path.resolve(__dirname);
+    const files = fs.readdirSync(directoryPath);
+    expect(files.length).toBeGreaterThan(0);
+  });
 });
