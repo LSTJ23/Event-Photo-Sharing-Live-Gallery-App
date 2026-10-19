@@ -11,6 +11,10 @@ export function createApp(database: Database) {
     response.status(200).json({ status: "ok" });
   });
 
+  app.get("/version", (_request, response) => {
+    response.status(200).json({ name: "event-photo-sharing-api", version: "0.1.0" });
+  });
+
   app.get("/health/db", async (_request, response) => {
     await database.query("SELECT 1");
     response.status(200).json({ status: "ok", database: "connected" });
