@@ -32,7 +32,6 @@ describe("health endpoints", () => {
     // Implement the test logic here
     const fs = await import("fs");
     const path = await import("path");
-    const expectedFiles = ["app.ts", "app.test.ts"];
     const directoryPath = path.resolve(__dirname);
     const files = fs.readdirSync(directoryPath);
     expect(files.length).toBeGreaterThan(0);
