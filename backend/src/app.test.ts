@@ -13,11 +13,27 @@ describe("health endpoints", () => {
     expect(response.body).toEqual({ status: "ok" });
   });
 
+  it("reports the API version", async () => {
+    const response = await request(app).get("/version");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ name: "event-photo-sharing-api", version: "0.1.0" });
+  });
+
   it("checks the database connection", async () => {
     const response = await request(app).get("/health/db");
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ status: "ok", database: "connected" });
     expect(query).toHaveBeenCalledWith("SELECT 1");
+  });
+
+  it("checks if the files in the directory exist", async () => {
+    // Implement the test logic here
+    const fs = await import("fs");
+    const path = await import("path");
+    const directoryPath = path.resolve(__dirname);
+    const files = fs.readdirSync(directoryPath);
+    expect(files.length).toBeGreaterThan(0);
   });
 });
