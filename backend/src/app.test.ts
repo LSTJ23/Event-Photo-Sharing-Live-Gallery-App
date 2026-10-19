@@ -13,6 +13,13 @@ describe("health endpoints", () => {
     expect(response.body).toEqual({ status: "ok" });
   });
 
+  it("reports the API version", async () => {
+    const response = await request(app).get("/version");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ name: "event-photo-sharing-api", version: "0.1.0" });
+  });
+
   it("checks the database connection", async () => {
     const response = await request(app).get("/health/db");
 
