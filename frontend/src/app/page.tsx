@@ -1,8 +1,6 @@
+import { redirect } from "next/navigation";
+
+// Participants start by scanning the event QR code.
 export default function Home() {
-  return (
-    <main>
-      <h1>Event Photo Sharing</h1>
-      <p>Your live event gallery starts here.</p>
-    </main>
-  );
+  redirect("/scan");
 }

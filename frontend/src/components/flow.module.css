@@ -1,0 +1,918 @@
+/* ---------- Screen frame: full-screen on phones, a phone-width column on desktop ---------- */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--screen-max);
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--surface);
+}
+
+/* Only on computers (a mouse and a wide window): show the app as a phone-width
+   card. Phones, including phones turned sideways, stay full-screen. */
+@media (min-width: 600px) and (hover: hover) and (pointer: fine) {
+  .screen {
+    min-height: min(100dvh, 900px);
+    margin: max(0px, calc((100dvh - 900px) / 2)) auto;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+  }
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 0 1rem;
+}
+
+.footer {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
+}
+
+.footerRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.centered {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+/* ---------- Header ---------- */
+
+.header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, max-content) minmax(0, 1fr);
+  column-gap: 0.25rem;
+  align-items: center;
+  min-height: 3.25rem;
+  padding: calc(0.25rem + env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) 0.25rem
+    max(1rem, env(safe-area-inset-left));
+}
+
+/* With Back or a right-hand button: equal side columns keep the title truly
+   centred, and 6.125rem fits "Live Gallery". Long titles end in "…". */
+.headerWithSides {
+  grid-template-columns: minmax(6.125rem, 1fr) minmax(0, auto) minmax(6.125rem, 1fr);
+}
+
+/* The narrowest phones (under 360px, e.g. the first iPhone SE): the Live
+   Gallery button shows its icon only, so the event name keeps its room. */
+@media (max-width: 359px) {
+  .headerWithSides {
+    grid-template-columns: minmax(3.75rem, 1fr) minmax(0, auto) minmax(3.75rem, 1fr);
+  }
+
+  .headerActionLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+.headerSide {
+  display: flex;
+  align-items: center;
+}
+
+.headerRight {
+  justify-content: flex-end;
+}
+
+.headerTitle {
+  margin: 0;
+  overflow: hidden;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0;
+  color: var(--ink);
+  font-size: 0.85rem;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.back svg,
+.headerAction svg {
+  display: block;
+  flex: none;
+}
+
+.iconBtn {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  font-size: 1.3rem;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* ---------- Buttons ---------- */
+
+.btnPrimary,
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.9rem;
+  padding: 0 1rem;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btnPrimary {
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.btnSecondary {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.btnPrimary:disabled,
+.btnSecondary:disabled,
+.btnPrimary[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.textLink {
+  padding: 0.5rem;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 0.85rem;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ---------- Text ---------- */
+
+.muted {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.caption {
+  margin: 0.75rem 0 0;
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.statusTitle {
+  margin: 0.75rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ---------- 01 QR scanner ---------- */
+
+.viewfinder {
+  position: relative;
+  flex: 1;
+  min-height: 18rem;
+  max-height: 32rem;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: #d6d6d6;
+}
+
+.viewfinder video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scanTarget {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(62%, 14rem);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.scanTarget::before,
+.scanTarget::after,
+.scanTarget span::before,
+.scanTarget span::after {
+  content: "";
+  position: absolute;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 0 solid var(--ink);
+}
+
+.scanTarget::before {
+  top: 0;
+  left: 0;
+  border-top-width: 3px;
+  border-left-width: 3px;
+}
+
+.scanTarget::after {
+  top: 0;
+  right: 0;
+  border-top-width: 3px;
+  border-right-width: 3px;
+}
+
+.scanTarget span::before {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 3px;
+  border-left-width: 3px;
+}
+
+.scanTarget span::after {
+  right: 0;
+  bottom: 0;
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+}
+
+.viewfinderLive .scanTarget::before,
+.viewfinderLive .scanTarget::after,
+.viewfinderLive .scanTarget span::before,
+.viewfinderLive .scanTarget span::after {
+  border-color: var(--surface);
+}
+
+.viewfinderMessage {
+  position: absolute;
+  inset: auto 1rem 1rem;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.92);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.instructions {
+  max-width: 16rem;
+  margin: 1.5rem auto 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.found {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ---------- Camera ---------- */
+
+/* Phones: the camera fills the whole screen, exactly, with nothing to scroll
+   or bounce. The feed is shown whole in its own shape (a 3:4 phone photo has
+   black above and below it, like a phone's own camera app). */
+.cameraScreen {
+  position: fixed;
+  inset: 0;
+  max-width: none;
+  min-height: 0;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Laptops and desktops: the camera screen wraps tightly around the feed:
+   the video is as tall as the window allows, its width follows the camera's
+   own shape (--cam-aspect), and the header and controls line up with it.
+   11.6rem = header (3.25rem) + controls (1.25rem + 4.5rem shutter + 2.6rem). */
+@media (min-width: 700px) and (hover: hover) and (pointer: fine) {
+  .cameraScreen {
+    position: static;
+    width: fit-content;
+    min-width: var(--screen-max);
+    max-width: calc(100vw - 4rem);
+    height: min(100dvh, 900px);
+    min-height: 0;
+  }
+
+  .cameraScreen .cameraView {
+    flex: none;
+    height: calc(min(100dvh, 900px) - 11.6rem);
+    max-width: calc(100vw - 4rem);
+    aspect-ratio: var(--cam-aspect, 16 / 9);
+  }
+}
+
+.cameraScreen .back,
+.cameraScreen .iconBtn,
+.cameraScreen .headerTitle {
+  color: #fff;
+}
+
+/* The viewfinder is the photo's own shape, right under the header. On short
+   screens it shrinks to fit (the whole photo still shows). */
+.cameraView {
+  position: relative;
+  flex: 0 1 auto;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: var(--cam-aspect, 3 / 4);
+  overflow: hidden;
+  background: #000;
+}
+
+/* Show the whole camera frame, so what you see is exactly what gets taken. */
+.cameraView video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mirrored {
+  transform: scaleX(-1);
+}
+
+.cameraNotice {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.cameraNotice p {
+  margin: 0;
+  color: #cfcfcf;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+/* Album | shutter | flip. The side columns are equal, and each side button is
+   centred in its column, so both sit the same distance from the shutter. */
+/* The controls take the space under the photo and sit in its middle. */
+.cameraControls {
+  display: grid;
+  flex: 1 0 auto;
+  grid-template-columns: 1fr auto 1fr;
+  align-content: center;
+  align-items: center;
+  justify-items: center;
+  width: 100%;
+  max-width: 26rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem calc(2.6rem + env(safe-area-inset-bottom));
+}
+
+/* Short phones (e.g. iPhone SE): tighter spacing so the photo gets the room. */
+@media (max-height: 640px) {
+  .cameraControls {
+    padding-top: 0.75rem;
+    padding-bottom: calc(2.1rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* A phone turned sideways: controls move to a column on the right, like a
+   phone's own camera app, so the photo keeps the screen's full height. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .cameraScreen {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto 1fr;
+  }
+
+  .cameraScreen > header {
+    grid-column: 1 / -1;
+    min-height: 2.75rem;
+  }
+
+  .cameraScreen .cameraView {
+    grid-row: 2;
+    grid-column: 1;
+    width: auto;
+    margin-left: env(safe-area-inset-left);
+    aspect-ratio: auto;
+  }
+
+  .cameraControls {
+    grid-row: 2;
+    grid-column: 2;
+    grid-template-columns: auto;
+    grid-template-rows: 1fr auto 1fr;
+    width: auto;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+    /* Equal top and bottom space keeps the shutter level with the photo's middle. */
+    padding: max(1.25rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-right))
+      max(1.25rem, env(safe-area-inset-bottom)) 1.25rem;
+  }
+}
+
+.shutter {
+  flex: none;
+  width: 4.5rem;
+  height: 4.5rem;
+  padding: 0;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: inset 0 0 0 3px #000;
+  cursor: pointer;
+}
+
+.shutter:active {
+  transform: scale(0.94);
+}
+
+.shutter:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- 02 Preview / 03 Share ---------- */
+
+/* The photo at its own shape, centred, with no empty box around it. */
+.previewFrame {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 12rem;
+  margin-top: 0.5rem;
+}
+
+.previewFrame img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(min(100dvh, 900px) - 17.5rem);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.12);
+}
+
+.readyBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.45rem 0.95rem 0.45rem 0.5rem;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  animation: popIn 0.35s ease-out;
+}
+
+.readyCheck {
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: #22c55e;
+  color: #fff;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.95);
+  }
+}
+
+/* Shows the whole photo at its own shape: landscape photos go wide,
+   portrait photos go tall, and nothing is cropped. */
+.shareThumb {
+  display: flex;
+  justify-content: center;
+  margin: 1rem auto 0;
+}
+
+.shareThumb img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(32dvh, 20rem);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+}
+
+.shareText {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 17rem;
+  margin: 1.5rem auto 0;
+  text-align: center;
+}
+
+.shareText h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* Same green as the "Photo ready" check. */
+.checkCircle {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: #22c55e;
+  color: #fff;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* ---------- 04 Gallery ---------- */
+
+.eventMeta {
+  padding: 0.5rem 1rem 0;
+}
+
+.eventName {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.eventDate {
+  margin: 0.15rem 0 0;
+  color: var(--ink-faint);
+  font-size: 0.75rem;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 1rem 1rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  padding: 0.65rem 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.tabActive {
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  margin: 0.75rem 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gridItem a {
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--surface-muted);
+}
+
+.gridItem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.emptyState {
+  margin: 3rem 1rem;
+  text-align: center;
+}
+
+.live {
+  position: relative;
+  margin: 0.75rem 1rem 0;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: #111;
+}
+
+.live img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: fadeIn 0.6s ease;
+}
+
+.liveBadge {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.liveBadge::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+.liveCaption {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 1.5rem 0.75rem 0.6rem;
+  background: linear-gradient(transparent, rgb(0 0 0 / 0.65));
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+
+.stickyFooter {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  background: linear-gradient(transparent, var(--surface) 30%);
+}
+
+/* ---------- 05 Single photo ---------- */
+
+/* The photo at its own shape, centred, with no empty box around it. The whole
+   area still takes swipes to move between photos. */
+.photoStage {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 12rem;
+  margin: 0.25rem 1rem 0;
+  touch-action: pan-y;
+}
+
+.photoStage img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(min(100dvh, 900px) - 10rem);
+  border-radius: var(--radius);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.photoMeta {
+  padding: 0.9rem 1rem calc(1.5rem + env(safe-area-inset-bottom));
+}
+
+.photoMeta p:first-child {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.photoMeta p + p {
+  margin: 0.2rem 0 0;
+  color: var(--ink-faint);
+  font-size: 0.75rem;
+}
+
+.counter {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Anonymous toggle (03 Share) ---------- */
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.toggleLabel {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.toggleHint {
+  margin: 0.15rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+}
+
+.switch {
+  position: relative;
+  flex: none;
+  width: 2.75rem;
+  height: 1.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #c7c7c7;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.switch[aria-checked="true"] {
+  background: var(--ink);
+}
+
+.switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.switchThumb {
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  transition: transform 0.2s;
+}
+
+.switch[aria-checked="true"] .switchThumb {
+  transform: translateX(1.15rem);
+}
+
+/* Short phones (e.g. the first iPhone SE): tighter gaps so the Share screen
+   fits without scrolling. */
+@media (max-height: 640px) {
+  .shareThumb {
+    margin-top: 0.5rem;
+  }
+
+  .shareText {
+    margin-top: 1rem;
+  }
+
+  .toggleRow {
+    margin-top: 1rem;
+  }
+}
+
+/* ---------- Camera: gallery and flip buttons ---------- */
+
+.cameraAction {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font-size: 0.72rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cameraAction:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cameraActionIcon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.16);
+}
+
+.cameraActionIcon svg {
+  display: block;
+}
+
+.cameraActionLabel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 50%;
+  transform: translateX(-50%);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.cameraAction:active .cameraActionIcon {
+  background: rgb(255 255 255 / 0.3);
+}
+
+.headerAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  padding: 0.4rem 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.cameraScreen .headerAction {
+  color: #fff;
+  text-decoration: none;
+}
