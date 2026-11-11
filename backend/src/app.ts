@@ -1,5 +1,5 @@
 import express from "express";
-import { getEventBySlug } from "./controllers/eventController";
+import { getEventBySlug } from "./controllers/eventController.js";
 
 export interface Database {
   query(sql: string): Promise<unknown>;
