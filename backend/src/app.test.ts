@@ -21,3 +21,15 @@ describe("health endpoints", () => {
     expect(query).toHaveBeenCalledWith("SELECT 1");
   });
 });
+
+describe("GET /api/events/slug/:qrSlug", () => {
+  const query = vi.fn<Database["query"]>().mockResolvedValue({ rows: [] });
+  const app = createApp({ query });
+
+  it("should return 404 for invalid QR slug", async () => {
+    const res = await request(app).get("/api/events/slug/non-existent-slug-999");
+
+    expect(res.status).toBe(404);
+    expect(res.body.valid).toBe(false);
+  });
+});
