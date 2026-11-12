@@ -1,74 +1,79 @@
-import { Request, Response } from 'express';
-import { createClient } from '@supabase/supabase-js';
-import { supabase } from '../supabase'; // Shared service-role client, used only for the profile lookup
+import type { Request, Response } from "express";
 
-// This function handles the login request when a user tries to sign in.
-export const login = async (req: Request, res: Response) => {
+// Defines the two roles that a user can have in the application.
+export type Role = "ADMIN" | "ORGANIZER";
 
-  // Get the email and password sent by the frontend through the request body.
-  const { email, password } = req.body;
+// Stores the user's login session information.
+export interface Session {
+  userId: string;
+  email: string;
+  accessToken: string;
+  refreshToken: string;
+}
 
-  // Check if the email or password is missing.
-  // If either is missing, stop the login process and send a 400 error.
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required.' });
-  }
+// Stores the user's profile information from the database.
+export interface Profile {
+  name: string | null;
+  role: Role;
+}
 
-  try {
-    // Create a temporary Supabase client specifically for user authentication.
-    // This prevents the login session from affecting the shared server client.
-    const authClient = createClient(
-      process.env.SUPABASE_URL!,      // Get the Supabase project URL from the environment variables.
-      process.env.SUPABASE_ANON_KEY!, // Get the public anon key from the environment variables.
-      {
-        auth: {
-          persistSession: false, // Do not save the session inside this temporary client.
-          autoRefreshToken: false // Do not automatically refresh the session token.
-        }
-      }
-    );
+// This interface defines the functions needed for authentication.
+export interface AuthService {
+  // This function verifies the user's email and password and returns a session if successful.
+  signIn(email: string, password: string): Promise<Session | null>;
 
-    // Ask Supabase to verify the user's email and password.
-    const { data, error } = await authClient.auth.signInWithPassword({
-      email: email.toLowerCase().trim(),
-      password,
-    });
+  // This function retrieves the user's profile information from the database.
+  getProfile(userId: string): Promise<Profile | null>;
+}
 
-    // Check if Supabase returned an error or did not provide a session.
-    // A session contains the tokens needed to authenticate the user.
-    // If login fails, send a 401 Unauthorized response.
-    if (error || !data.session) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+// This function creates a login handler using the provided authentication service.
+export function createLoginHandler(auth: AuthService) {
+  // This function handles incoming login requests and sends the appropriate response.
+  return async (request: Request, response: Response) => {
+    // Extracts the email and password from the request body.
+    const { email, password } = (request.body ?? {}) as {
+      email?: unknown;
+      password?: unknown;
+    };
+
+    // Validates that both email and password are provided and are strings.
+    if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
+      return response.status(400).json({ error: "Email and password are required." });
     }
 
-    // Retrieve the user's additional information from the profiles table.
-    const { data: profile } = await supabase
-      .from('profiles') // Select the profiles table.
-      .select('name, role') // Only retrieve the name and role columns.
-      .eq('id', data.user.id) // Find the profile matching the logged-in user's ID.
-      .single(); // Return one matching profile instead of an array.
+    try {
+      // Calls the signIn function to verify the user's credentials.
+      const session = await auth.signIn(email.toLowerCase().trim(), password);
 
-    // Send a successful login response back to the frontend.
-    return res.status(200).json({
-      message: 'Login successful',
+      // If signIn returns null, the email or password is incorrect.
+      if (!session) {
+        return response.status(401).json({ error: "Invalid email or password." });
+      }
 
-      // Access token used to authenticate future requests.
-      access_token: data.session.access_token,
+      // Retrieves the user's profile using their ID from the login session.
+      const profile = await auth.getProfile(session.userId);
 
-      // Refresh token used to obtain a new access token when needed.
-      refresh_token: data.session.refresh_token,
+      // If no profile exists, the account has no assigned role.
+      if (!profile) {
+        return response.status(403).json({ error: "This account has no role assigned." });
+      }
 
-      // Return the user's basic account information and profile details.
-      user: {
-        id: data.user.id, // The unique ID assigned to the user by Supabase.
-        name: profile?.name, // The user's name from the profiles table.
-        email: data.user.email, // The email address associated with the account.
-        role: profile?.role, // The user's assigned role, such as admin or user.
-      },
-    });
-
-  } catch {
-    // Handle unexpected errors that occur during the login process.
-    return res.status(500).json({ error: 'Internal server error during login.' });
-  }
-};
+      // Returns HTTP 200 with the user's session tokens and profile information.
+      return response.status(200).json({
+        message: "Login successful",
+        access_token: session.accessToken,
+        refresh_token: session.refreshToken,
+        user: {
+          id: session.userId,
+          name: profile.name,
+          email: session.email,
+          role: profile.role // "ADMIN" or "ORGANIZER"
+        }
+      });
+    } catch {
+      
+      // Returns HTTP 500 if an unexpected error occurs during the login process.
+      return response.status(500).json({ error: "Internal server error during login." });
+    }
+  };
+}
