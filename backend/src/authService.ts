@@ -1,6 +1,6 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { AuthService, Role } from "./authController.js";
+import type { AuthService, Role } from "./controllers/authController.js";   
 
 // Creates the Supabase authentication service.
 export function createSupabaseAuthService(

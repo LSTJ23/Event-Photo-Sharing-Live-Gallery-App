@@ -1,5 +1,5 @@
 import express from "express";
-import { createLoginHandler, type AuthService } from "./authController.js";
+import { createLoginHandler, type AuthService } from "./controllers/authController.js";
 
 export interface Database {
   query(sql: string): Promise<unknown>;

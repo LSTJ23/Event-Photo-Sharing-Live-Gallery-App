@@ -2,7 +2,7 @@
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.js";
-import type { AuthService } from "./authController.js";
+import type { AuthService } from "./controllers/authController.js";
 
 // Mock database used for testing.
 const database = { query: vi.fn().mockResolvedValue({ rows: [] }) };
