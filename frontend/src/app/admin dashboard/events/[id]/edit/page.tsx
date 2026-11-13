@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import EventForm from "@/components/EventForm";
+import EventForm from "@/components/admin/EventForm";
 import PageHeader from "@/components/PageHeader";
 import { events } from "@/lib/data";
 
