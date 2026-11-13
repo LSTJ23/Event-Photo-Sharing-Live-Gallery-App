@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import EventForm from "@/components/admin/EventForm";
-import PageHeader from "@/components/PageHeader";
+import PageHeader from "@/components/admin/PageHeader";
 import { events } from "@/lib/data";
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { PlusCircleIcon, StarIcon, UsersIcon } from "@/components/Icons";
-import StatCard from "@/components/StatCard";
+import { PlusCircleIcon, StarIcon, UsersIcon } from "@/components/admin/Icons";
+import StatCard from "@/components/admin/StatCard";
 import { getStats } from "@/lib/data";
 
 function Action({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
@@ -24,19 +24,19 @@ export default function HomePage() {
       <div className="body">
         <div className="action-groups">
           <section className="action-group" aria-label="Events">
-            <Action href="/events/create" label="Create Event" icon={<PlusCircleIcon />} />
-            <Action href="/events" label="Manage Events" icon={<StarIcon />} />
+            <Action href="/admin%20dashboard/events/create" label="Create Event" icon={<PlusCircleIcon />} />
+            <Action href="/admin%20dashboard/events" label="Manage Events" icon={<StarIcon />} />
           </section>
           <section className="action-group alt" aria-label="Users">
-            <Action href="/users/create" label="Create User" icon={<PlusCircleIcon />} />
-            <Action href="/users" label="Manage Users" icon={<UsersIcon />} />
+            <Action href="/admin%20dashboard/users/create" label="Create User" icon={<PlusCircleIcon />} />
+            <Action href="/admin%20dashboard/users" label="Manage Users" icon={<UsersIcon />} />
           </section>
         </div>
 
         <section className="overview" aria-label="Report logs overview">
           <div className="overview-head">
             <span>Report Logs Overview</span>
-            <Link href="/reports" className="pill">View More</Link>
+            <Link href="/admin%20dashboard/reports" className="pill">View More</Link>
           </div>
           <div className="stats">
             <StatCard label="Total Events" value={stats.totalEvents} />

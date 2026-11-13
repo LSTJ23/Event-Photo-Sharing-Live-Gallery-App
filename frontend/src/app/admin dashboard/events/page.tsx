@@ -1,5 +1,5 @@
-import ManageList from "@/components/ManageList";
-import PageHeader from "@/components/PageHeader";
+import ManageList from "@/components/admin/ManageList";
+import PageHeader from "@/components/admin/PageHeader";
 import { events } from "@/lib/data";
 
 export default function ManageEventsPage() {
@@ -7,8 +7,8 @@ export default function ManageEventsPage() {
     id: e.id,
     name: e.name,
     actions: [
-      { label: "Edit", href: `/events/${e.id}/edit` },
-      { label: "Gallery", href: `/events/${e.id}/gallery` },
+      { label: "Edit", href: `/admin%20dashboard/events/${e.id}/edit` },
+      { label: "Gallery", href: `/admin/e/${e.id}` },
       { label: "QR", href: `/events/${e.id}/qr` },
     ],
   }));
@@ -17,7 +17,7 @@ export default function ManageEventsPage() {
     <div className="page">
       <PageHeader title="Manage Events" />
       <div className="body">
-        <ManageList items={items} addHref="/events/create" emptyText="No events found" />
+        <ManageList items={items} addHref="/admin%20dashboard/events/create" emptyText="No events found" />
       </div>
     </div>
   );

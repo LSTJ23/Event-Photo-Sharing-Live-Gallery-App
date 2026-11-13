@@ -1,5 +1,5 @@
-import PageHeader from "@/components/PageHeader";
-import UserForm from "@/components/UserForm";
+import PageHeader from "@/components/admin/PageHeader";
+import UserForm from "@/components/admin/UserForm";
 
 export default function CreateUserPage() {
   return (

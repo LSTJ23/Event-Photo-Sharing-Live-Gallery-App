@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import PageHeader from "@/components/PageHeader";
-import UserForm from "@/components/UserForm";
+import PageHeader from "@/components/admin/PageHeader";
+import UserForm from "@/components/admin/UserForm";
 import { orgs } from "@/lib/data";
 
 export default async function EditUserPage({ params }: { params: Promise<{ id: string }> }) {

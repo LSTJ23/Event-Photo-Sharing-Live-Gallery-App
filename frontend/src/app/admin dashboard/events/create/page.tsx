@@ -1,5 +1,5 @@
-import EventForm from "@/components/EventForm";
-import PageHeader from "@/components/PageHeader";
+import EventForm from "@/components/admin/EventForm";
+import PageHeader from "@/components/admin/PageHeader";
 
 export default function CreateEventPage() {
   return (

@@ -1,5 +1,5 @@
-import PageHeader from "@/components/PageHeader";
-import StatCard from "@/components/StatCard";
+import PageHeader from "@/components/admin/PageHeader";
+import StatCard from "@/components/admin/StatCard";
 import { getStats, getTopOrganizers } from "@/lib/data";
 
 export default function ReportLogsPage() {
