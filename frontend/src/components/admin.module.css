@@ -1,0 +1,721 @@
+/* Admin pages: desktop layout. Sizes follow the Figma frames 06–09b
+   (1440px wide: a 1200px content column, 70px top bar). */
+
+.page {
+  /* flow-root keeps the last element's bottom margin inside the white page. */
+  display: flow-root;
+  min-height: 100dvh;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.container {
+  width: 100%;
+  max-width: calc(1200px + 4rem);
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* ---------- Top bar ---------- */
+
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid #ececec;
+  background: var(--surface);
+}
+
+.topBarInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 70px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rolePill {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid #e3e3e3;
+  border-radius: 999px;
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn,
+.btnDark,
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding: 0 1.1rem;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn:hover:not(:disabled),
+.iconButton:hover {
+  background: #f4f4f4;
+}
+
+.btnDark {
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.btnDark:hover:not(:disabled) {
+  background: #2a2a2a;
+}
+
+.btn:disabled,
+.btnDark:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.iconButton {
+  width: 2.5rem;
+  padding: 0;
+  border-color: #d9d9d9;
+}
+
+.btnTall {
+  height: 3rem;
+  width: 100%;
+}
+
+.textButton {
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ---------- 06 Gallery ---------- */
+
+.eventHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 2.5rem;
+}
+
+.eventHeaderAfterBack {
+  padding-top: 1rem;
+}
+
+.eventTitleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.eventTitleRow svg {
+  margin-top: 0.2rem;
+}
+
+.eventName {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.eventMeta,
+.photoCount,
+.muted {
+  margin: 0.2rem 0 0;
+  color: var(--ink-faint);
+  font-size: 0.85rem;
+}
+
+.photoCount {
+  margin-top: 0.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabs {
+  display: flex;
+  margin-top: 1.75rem;
+}
+
+.tab {
+  width: 10rem;
+  padding: 0.75rem 0;
+  border: 0;
+  border-bottom: 2px solid #ececec;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.tabActive {
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* Six across at full width, fewer as the window narrows. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin: 1.5rem 0 3rem;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.tile {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--surface-muted);
+}
+
+.tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.liveView {
+  max-width: 900px;
+  aspect-ratio: 16 / 10;
+  margin: 1.5rem auto 3rem;
+}
+
+.statusMessage {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 6rem 2rem;
+  text-align: center;
+}
+
+.statusMessage h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.emptyGrid {
+  margin: 4rem 0;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+/* ---------- 09 Manage gallery ---------- */
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 2rem;
+  color: var(--ink);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.pageTitle {
+  margin: 0.6rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Fills the window's height so "Back to Gallery" sits near the bottom, as in
+   the design, while the photos column can grow (and the page scroll) past it. */
+.manageLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 4rem;
+  min-height: calc(100dvh - 70px - 8.5rem);
+  margin-top: 2.5rem;
+  padding-bottom: 3rem;
+}
+
+.manageInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionLabel {
+  margin: 0 0 0.75rem;
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.infoList {
+  margin: 0;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3rem;
+  border-bottom: 1px solid #ececec;
+  font-size: 0.875rem;
+}
+
+.infoRow dt {
+  color: var(--ink-faint);
+}
+
+.infoRow dd {
+  margin: 0;
+  text-align: right;
+}
+
+.linkBlock {
+  margin-top: 2rem;
+}
+
+.linkField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  height: 3rem;
+  padding: 0 0.5rem 0 1rem;
+  border-radius: 6px;
+  background: #f4f4f4;
+  font-size: 0.875rem;
+}
+
+.linkField span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linkCopy {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.linkCopy:hover {
+  background: #e7e7e7;
+}
+
+.linkBlock .btn {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+/* Event QR code under the share link: the code on the left, download on the right. */
+.qrRow {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid #ececec;
+  border-radius: 8px;
+}
+
+.qrThumb {
+  display: block;
+  flex: none;
+}
+
+.qrRowText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.qrRowTitle {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.qrRowText .muted {
+  margin: 0 0 0.5rem;
+}
+
+.manageInfo .backButton {
+  margin-top: auto;
+  padding-top: 3rem;
+}
+
+.manageGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A manage tile: click the photo to select it; the bin removes just that one. */
+.selectTile {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/* Selected photos dim slightly, like the Photos app on iPhone. */
+.tileSelected img {
+  opacity: 0.7;
+}
+
+/* Selection bubble, top-left of every photo: an empty white ring, filled with
+   a tick when the photo is selected. */
+.selectBubble {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.2);
+  color: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  pointer-events: none;
+  transition: background 0.12s;
+}
+
+.selectBubble svg {
+  opacity: 0;
+}
+
+.tileSelected .selectBubble {
+  background: var(--ink);
+}
+
+.tileSelected .selectBubble svg {
+  opacity: 1;
+}
+
+.tileTrash {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  cursor: pointer;
+}
+
+.tileTrash:hover {
+  background: var(--danger-hover);
+}
+
+/* "Manage photos" with, once photos are selected, Clear and Delete on the right.
+   Fixed height, so the grid doesn't jump when the buttons appear. */
+.manageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 2.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.manageHeader .sectionLabel {
+  margin: 0;
+}
+
+.selectionActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 2.25rem;
+  padding: 0 0.95rem;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  animation: fade 0.15s ease-out;
+}
+
+.btnDanger:hover {
+  background: var(--danger-hover);
+}
+
+.manageHint {
+  margin: 0.75rem 0 0;
+  color: var(--ink-faint);
+  font-size: 0.78rem;
+}
+
+/* ---------- Dialogs (07, 08, 09b) ---------- */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(0 0 0 / 0.55);
+  animation: fade 0.15s ease-out;
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 22rem;
+  max-width: 100%;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.25);
+  text-align: center;
+  animation: rise 0.18s ease-out;
+}
+
+.dialog:focus {
+  outline: none;
+}
+
+.dialogIcon {
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+}
+
+/* Same green check as the participant "Photo ready" and "Photo shared!" screens. */
+.dialogCheck {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: #22c55e;
+  color: #fff;
+}
+
+.dialogTitle {
+  margin: 0.6rem 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.dialogText {
+  margin: 0.35rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.dialogQr {
+  display: block;
+  margin-top: 1rem;
+  border: 1px solid #ececec;
+  border-radius: 8px;
+}
+
+.dialog .linkField {
+  width: 100%;
+  height: 2.75rem;
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.dialogActions {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.dialogActionsRow {
+  grid-template-columns: 1fr 1fr;
+}
+
+.dialogActions .btn,
+.dialogActions .btnDark {
+  height: 2.75rem;
+}
+
+.dialogError {
+  margin: 0.75rem 0 0;
+  color: #b42318;
+  font-size: 0.8rem;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+/* ---------- Phones and narrow windows ----------
+   Organizers use these pages on phones too: one column, three photos across,
+   an icon-only share button, and room around the edges. */
+
+@media (max-width: 900px) {
+  .manageLayout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem;
+    min-height: 0;
+  }
+
+  /* The "‹ Event Gallery" link at the top does the same job on one column. */
+  .manageInfo .backButton {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 max(1rem, env(safe-area-inset-right)) 0 max(1rem, env(safe-area-inset-left));
+  }
+
+  .topBar {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .topBarInner {
+    height: 56px;
+  }
+
+  .btnLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .topActions .btnDark {
+    width: 2.5rem;
+    padding: 0;
+  }
+
+  .backLink {
+    margin-top: 1.25rem;
+  }
+
+  .eventName,
+  .pageTitle {
+    font-size: 1.15rem;
+  }
+
+  .tab {
+    flex: 1;
+    width: auto;
+  }
+
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
+
+  .liveView {
+    margin-bottom: 2rem;
+  }
+
+  .manageLayout {
+    margin-top: 1.5rem;
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
+
+  .manageGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+
+  .tileTrash {
+    top: 0.35rem;
+    right: 0.35rem;
+  }
+
+  .selectBubble {
+    top: 0.35rem;
+    left: 0.35rem;
+  }
+}
