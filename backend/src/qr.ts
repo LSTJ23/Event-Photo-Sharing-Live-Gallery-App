@@ -1,6 +1,6 @@
-import QRCode from "qrcode"; 
+import QRCode from "qrcode";
 
-// Share link guests open after scanning the QR code.export function buildShareUrl(baseUrl: string, eventCode: string): string {
+// Share link guests open after scanning the QR code.
 export function buildShareUrl(baseUrl: string, eventCode: string): string {
     return `${baseUrl.replace(/\/+$/, "")}/event/${encodeURIComponent(eventCode)}`;
 }
