@@ -1,4 +1,20 @@
 :root {
+
+  color-scheme: light;
+  --font: Inter, "Helvetica Neue", Arial, Helvetica, sans-serif;
+  --ink: #111111;
+  --ink-muted: #6b6b6b;
+  --ink-faint: #9a9a9a;
+  --line: #d9d9d9;
+  --surface: #ffffff;
+  --surface-muted: #ececec;
+  --page: #ededed;
+  --line-soft: #ececec;
+  /* Red for delete and report actions. */
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --radius: 4px;
+  --screen-max: 440px;
   --primary: #8b5e34;
   --primary-hover: #704724;
   --bg-gradient-1: #eaddcf;
@@ -9,11 +25,26 @@
   --text-light: #6d4c41;
   --glass-bg: rgba(255, 250, 245, 0.75);
   --glass-border: rgba(255, 255, 255, 0.5);
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--page);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
 }
 
 body {
-  margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   background: linear-gradient(-45deg, var(--bg-gradient-1), var(--bg-gradient-2), var(--bg-gradient-3), var(--bg-gradient-4));
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
@@ -21,6 +52,32 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* No double-tap zoom delay on taps. */
+a,
+button,
+input,
+label {
+  touch-action: manipulation;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  font-family: system-ui, -apple-system, sans-serif;
+
 }
 
 @keyframes gradientBG {
