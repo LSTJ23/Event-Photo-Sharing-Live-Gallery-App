@@ -28,7 +28,7 @@ npm run dev:frontend
 npm run dev:backend
 ```
 
-The API listens on port 3001 by default. Set `DATABASE_URL` to connect it to PostgreSQL. Its `/health` route checks the API process, and `/health/db` checks database connectivity.
+The API listens on port 3001 by default. Set `DATABASE_URL` to connect it to PostgreSQL. Its `/health` route checks the API process, and `/health/db` checks database connectivity. `/version` returns the API name and version.
 
 ## Checks
 
