@@ -2,12 +2,12 @@ import express from "express";
 import { createLoginHandler, type AuthService } from "./controllers/authController.js";
 
 export interface Database {
-  query(sql: string): Promise<unknown>;
+    query(sql: string): Promise<unknown>;
 }
   
 
-   export interface AppServices {
-     auth?: AuthService;
+export interface AppServices {
+    auth?: AuthService;
    }
 
 export function createApp(database: Database, services: AppServices = {}) {

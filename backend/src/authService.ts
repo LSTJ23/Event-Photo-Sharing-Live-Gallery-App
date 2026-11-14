@@ -1,73 +1,54 @@
+import jwt from "jsonwebtoken";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { AuthService, Role } from "./controllers/authController.js";
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { AuthService, Role } from "./controllers/authController.js";   
+// Sets the JWT expiration time to 12 hours.
+const TOKEN_LIFETIME_SECONDS = 60 * 60 * 12;
 
-// Creates the Supabase authentication service.
+// Creates an authentication service that checks users in Supabase and generates JWTs.
 export function createSupabaseAuthService(
-  admin: SupabaseClient, // Shared admin client for database operations.
-  env: NodeJS.ProcessEnv = process.env // Gets the environment variables.
+  admin: SupabaseClient,
+  env: NodeJS.ProcessEnv = process.env
 ): AuthService {
-  // Get the Supabase URL and publishable key.
-  const url = env.SUPABASE_URL;
-  const publishableKey = env.SUPABASE_PUBLISHABLE_KEY;
+  // Gets the JWT secret from the environment variables.
+  const secret = env.JWT_SECRET;
 
-  // Check if the required environment variables exist.
-  if (!url || !publishableKey) {
-    throw new Error(
-      "Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY. Copy backend/.env.example to backend/.env and fill them in."
-    );
+  // Prevents the application from running without a JWT secret.
+  if (!secret) {
+    throw new Error("Missing JWT_SECRET. Copy backend/.env.example to backend/.env and fill it in.");
   }
 
   return {
-    // Verifies the user's email and password through Supabase.
-    async signIn(email, password) {
-      // Create a separate client for this login attempt.
-      const client = createClient(url, publishableKey, {
-        auth: { persistSession: false, autoRefreshToken: false }
-      });
-
-      // Send the login credentials to Supabase.
-      const { data, error } = await client.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        // Return null if the email or password is incorrect.
-        if (error.code === "invalid_credentials") return null;
-
-        // Throw other errors so they can be handled elsewhere.
-        throw error;
-      }
-
-      // Make sure a valid session and email were returned.
-      if (!data.session || !data.user.email) return null;
-
-      // Return the user's ID, email, and authentication tokens.
-      return {
-        userId: data.user.id,
-        email: data.user.email,
-        accessToken: data.session.access_token,
-        refreshToken: data.session.refresh_token
-      };
-    },
-
-    // Retrieves the user's name and role from the profiles table.
-    async getProfile(userId) {
+    // Checks whether the username and email match a user in the database.
+    async signIn(username, email) {
       const { data, error } = await admin
-        .from("profiles")
-        .select("name, role")
-        .eq("id", userId) // Find the profile matching the user's ID.
-        .maybeSingle(); // Return one profile or null if none exists.
+        .from("users")
+        .select("id, name, username, email, role")
+        .eq("username", username)
+        .eq("email", email)
+        .maybeSingle();
 
-      // Handle database errors.
+      // Handles database errors and returns null if no user is found.
       if (error) throw error;
-
-      // Return null if the user has no matching profile.
       if (!data) return null;
 
-      // Return the user's profile information.
-      return {
+      // Organizes the database result into a user object.
+      const user = {
+        id: data.id as string,
         name: data.name as string | null,
+        username: data.username as string,
+        email: data.email as string,
         role: data.role as Role
       };
+
+      // Generates a JWT containing the user's role and ID.
+      const accessToken = jwt.sign({ role: user.role }, secret, {
+        subject: user.id,
+        expiresIn: TOKEN_LIFETIME_SECONDS
+      });
+
+      // Returns the user information and generated access token.
+      return { user, accessToken };
     }
   };
 }
