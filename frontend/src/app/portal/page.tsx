@@ -157,7 +157,7 @@ export default function AppPortal() {
             </button>
           </form>
           <p className="text-center mt-4 stagger-3" style={{ fontSize: "0.875rem" }}>
-            Don't have an account? <button onClick={handleOpenRegister} className="text-link">Sign up</button>
+            Don&apos;t have an account? <button onClick={handleOpenRegister} className="text-link">Sign up</button>
           </p>
         </div>
       </div>
