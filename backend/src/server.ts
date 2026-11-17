@@ -4,7 +4,7 @@ import { createApp } from "./app.js";
 const port = Number(process.env.PORT ?? 3001);
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const server = createApp(pool).listen(port, () => {
-  console.log(`API listening ${port}`);
+  console.log(`API listening at the port number ${port}`);
 });
 
 async function shutdown() {
