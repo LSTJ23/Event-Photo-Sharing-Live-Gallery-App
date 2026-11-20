@@ -2,6 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 
+/**
+ * What to ask the camera for.
+ * - Laptops and desktops: a width only, so the webcam keeps its own shape
+ *   (usually 16:9). Asking for a shape too would make the browser crop it.
+ * - Phones: 4:3, the shape the phone's own Camera app takes photos in. It's the
+ *   sensor's natural shape, so it shows the widest view, and held upright it
+ *   fills the screen's width. (Phones otherwise send a narrow 9:16 video.)
+ */
+function cameraConstraints(facing: Facing): MediaTrackConstraints {
+  const isPhone = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+  return isPhone
+    ? { facingMode: { ideal: facing }, width: { ideal: 1920 }, aspectRatio: { ideal: 4 / 3 } }
+    : { facingMode: { ideal: facing }, width: { ideal: 1920 } };
+}
+
 export type CameraStatus = "starting" | "ready" | "denied" | "unsupported" | "error";
 export type Facing = "environment" | "user";
 
@@ -32,10 +47,7 @@ export function useCamera(facing: Facing = "environment") {
 
     const start = navigator.mediaDevices?.getUserMedia
       ? navigator.mediaDevices.getUserMedia({
-          // Ask for a width only. Giving a height too makes the browser crop the
-          // feed to that shape; this way it keeps the camera's own shape
-          // (wide on laptops, tall on phones held upright).
-          video: { facingMode: { ideal: facing }, width: { ideal: 1920 } },
+          video: cameraConstraints(facing),
           audio: false
         })
       : Promise.reject(Object.assign(new Error("No camera API"), { name: "NotSupportedError" }));
@@ -79,17 +91,4 @@ export function useCamera(facing: Facing = "environment") {
   return { videoRef, status, setStatus, cameraCount, frontFacing, aspect };
 }
 
-/** Grabs the current video frame as a JPEG. Mirrors it for the front camera. */
-export function captureFrame(video: HTMLVideoElement, mirror: boolean): Promise<Blob | null> {
-  const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const context = canvas.getContext("2d");
-  if (!context || !canvas.width) return Promise.resolve(null);
-  if (mirror) {
-    context.translate(canvas.width, 0);
-    context.scale(-1, 1);
-  }
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
-}
+export { captureFrame } from "@/lib/captureFrame";

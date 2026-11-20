@@ -187,3 +187,43 @@ export function ChevronRightIcon({ size = 16 }: { size?: number }) {
     </svg>
   );
 }
+
+/** Magnifying glass: search. */
+export function SearchIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="M20 20l-4.2-4.2" />
+    </svg>
+  );
+}
+
+/** Plus in a circle: create something. */
+export function PlusCircleIcon({ size = 22 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v8M8 12h8" />
+    </svg>
+  );
+}
+
+/** A star: events. */
+export function StarIcon({ size = 22 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z" />
+    </svg>
+  );
+}
+
+/** Two people: users. */
+export function UsersIcon({ size = 22 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" />
+      <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.1.7 3.5 2.8 3.5 5.7" />
+    </svg>
+  );
+}

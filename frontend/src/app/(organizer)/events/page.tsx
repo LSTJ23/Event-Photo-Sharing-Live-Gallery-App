@@ -37,7 +37,7 @@ export default function EventsPage() {
                 </div>
 
                 <div className={styles.actions}>
-                  <Link href={`/admin/e/${event.id}`} className={styles.action}>
+                  <Link href={`/events/${event.id}/gallery`} className={styles.action}>
                     <GalleryIcon size={20} />
                     Gallery
                   </Link>
