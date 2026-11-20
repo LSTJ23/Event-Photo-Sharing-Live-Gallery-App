@@ -37,7 +37,7 @@ export function EventSession({
 }: {
   eventId: string;
   children: React.ReactNode;
-  /** "admin" shows loading and error messages in the desktop admin layout. */
+  /** "admin" shows loading and error messages in the organizer dashboard's style. */
   variant?: "participant" | "admin";
 }) {
   const [load, setLoad] = useState<LoadState>({ status: "loading" });
@@ -81,7 +81,7 @@ export function EventSession({
 
   if (load.status !== "ready" && variant === "admin") {
     return (
-      <main className={adminStyles.page}>
+      <div>
         <div className={adminStyles.statusMessage}>
           {load.status === "loading" ? (
             <p className={adminStyles.muted}>Loading event…</p>
@@ -96,7 +96,7 @@ export function EventSession({
             </>
           )}
         </div>
-      </main>
+      </div>
     );
   }
 

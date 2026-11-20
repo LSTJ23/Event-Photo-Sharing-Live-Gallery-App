@@ -12,7 +12,7 @@
   /* Red for delete and report actions. */
   --danger: #dc2626;
   --danger-hover: #b91c1c;
-  --radius: 0px; 
+  --radius: 4px;
   --screen-max: 440px;
   --primary: #000000; 
   --primary-hover: #333333;
@@ -44,13 +44,22 @@ body {
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+}
+
+/* The login and sign-up page's own look (/portal): its background, text
+   colour and font. Kept on that page only (see app/portal/layout.tsx), so the
+   rest of the app keeps its own look. */
+.portal-page {
+  --radius: 0px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: linear-gradient(-45deg, var(--bg-gradient-1), var(--bg-gradient-2), var(--bg-gradient-3), var(--bg-gradient-4));
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
   color: var(--text-dark);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 /* No double-tap zoom delay on taps. */
@@ -75,7 +84,6 @@ img {
 :focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
-  font-family: system-ui, -apple-system, sans-serif;
 }
 
 @keyframes gradientBG {

@@ -8,6 +8,8 @@ interface ModalProps {
   labelledBy: string;
   onClose: () => void;
   children: React.ReactNode;
+  /** Extra class for the dialog box, e.g. a wider form. */
+  className?: string;
 }
 
 /**
@@ -15,7 +17,7 @@ interface ModalProps {
  * closes it. Focus moves to the element marked `data-autofocus` (or the dialog)
  * and returns to whatever was focused before when it closes.
  */
-export function Modal({ labelledBy, onClose, children }: ModalProps) {
+export function Modal({ labelledBy, onClose, children, className }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   // Always call the latest onClose, without re-running the setup below when
   // the page around the dialog re-renders (e.g. the gallery refreshing).
@@ -50,7 +52,7 @@ export function Modal({ labelledBy, onClose, children }: ModalProps) {
         if (event.target === event.currentTarget) onCloseRef.current();
       }}
     >
-      <div ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby={labelledBy} tabIndex={-1}>
+      <div ref={dialogRef} className={`${styles.dialog} ${className ?? ""}`} role="dialog" aria-modal="true" aria-labelledby={labelledBy} tabIndex={-1}>
         {children}
       </div>
     </div>

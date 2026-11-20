@@ -1,4 +1,4 @@
-/* Organizer dashboard: phone first, widening on tablets and desktops.
+/* Organizer and admin dashboards: phone first, widening on tablets and desktops.
    Same look as the admin pages (admin.module.css): black and white, thin grey
    lines, bold black buttons, the shared red for delete and reports. */
 
@@ -779,6 +779,321 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
   margin-top: 1.5rem;
+}
+
+/* ---------- Admin: home tiles ---------- */
+
+.tileGroups {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .tileGroups {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.groupLabel {
+  margin: 0 0 0.6rem;
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 7rem;
+  padding: 1rem 0.5rem;
+  border: 1px solid #d9d9d9;
+  border-radius: 12px;
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.tile:hover {
+  border-color: var(--ink);
+  background: #f7f7f7;
+}
+
+.overview {
+  margin-top: 1.25rem;
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.panelHead .panelTitle {
+  margin: 0;
+}
+
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rankList {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+  line-height: 2;
+}
+
+/* ---------- Admin: searchable lists ---------- */
+
+.searchRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.searchField {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  height: 2.75rem;
+  padding: 0 0.85rem;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  color: var(--ink-faint);
+}
+
+.searchField:focus-within {
+  border-color: var(--ink);
+}
+
+.searchField input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+@media (max-width: 480px) {
+  .hideOnPhone {
+    display: none;
+  }
+
+  .searchRow .btnDark {
+    width: 2.75rem;
+    padding: 0;
+    font-size: 1.2rem;
+  }
+}
+
+.manageList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line-soft);
+}
+
+.manageRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+  padding: 0.9rem 0.25rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.manageText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.manageName {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.manageDetail {
+  margin-top: 0.1rem;
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+}
+
+.manageActions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.btnSmall {
+  display: inline-flex;
+  align-items: center;
+  height: 2.25rem;
+  padding: 0 0.85rem;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.btnSmall:hover {
+  border-color: var(--ink);
+  background: #f7f7f7;
+}
+
+/* ---------- Admin: forms ---------- */
+
+.formLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .formLayout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+}
+
+.narrowForm {
+  max-width: 32rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1rem;
+}
+
+.field label {
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+}
+
+.fullWidth {
+  width: 100%;
+  margin-top: 1.25rem;
+}
+
+.formNote {
+  margin: 0.75rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+/* ---------- Admin: calendar ---------- */
+
+.calendar {
+  margin-top: 1rem;
+}
+
+.calHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.calHead button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.calHead button:hover {
+  background: #f4f4f4;
+}
+
+.calGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.2rem;
+}
+
+.calDow {
+  padding: 0.35rem 0;
+  color: var(--ink-faint);
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.calDay {
+  aspect-ratio: 1;
+  max-height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.calDay:hover {
+  background: #f4f4f4;
+}
+
+.calToday {
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.calSelected,
+.calSelected:hover {
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+}
+
+.calTime {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line-soft);
+  font-size: 0.85rem;
+}
+
+.calTime input {
+  flex: none;
+  width: auto;
 }
 
 /* ---------- Toast ---------- */

@@ -374,13 +374,32 @@
   background: #000;
 }
 
-/* Show the whole camera frame, so what you see is exactly what gets taken. */
+/* Computers: show the whole camera frame (the screen wraps around it). */
 .cameraView video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* Phones: the picture always fills the viewfinder edge to edge, with no black
+   side bands. If the phone's picture is a different shape from the space
+   available, its edges are trimmed, and the photo is trimmed the same way when
+   it's taken (lib/captureFrame.ts), so the photo still matches the screen. */
+@media (pointer: coarse) {
+  .cameraView video {
+    object-fit: cover;
+  }
+}
+
+/* Phones held upright: always a 3:4 viewfinder, like the phone's own Camera
+   app, whatever shape the camera sends (a wide picture is trimmed at the sides
+   to fill it). It shrinks on short screens so the buttons always fit. */
+@media (pointer: coarse) and (orientation: portrait) {
+  .cameraView {
+    aspect-ratio: 3 / 4;
+  }
 }
 
 .mirrored {
@@ -511,11 +530,14 @@
   margin-top: 0.5rem;
 }
 
+/* As tall as the space between the title and the buttons allows:
+   header 3.25rem + badge and gaps 3.5rem + buttons 5.25rem, plus the phone's
+   notch and home-bar areas. */
 .previewFrame img {
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: calc(min(100dvh, 900px) - 17.5rem);
+  max-height: calc(min(100dvh, 900px) - 12.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   border-radius: var(--radius);
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.12);
 }
