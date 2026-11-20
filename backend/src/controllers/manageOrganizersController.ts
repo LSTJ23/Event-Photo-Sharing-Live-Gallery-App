@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
 import { validateOrganizerInput } from "../organizerValidation.js";
-import { DuplicateOrganizerError, type OrganizerStore } from "../organizerStore.js";
+import { DuplicateOrganizerError, type ManagedOrganizerStore } from "../managedOrganizerStore.js";
 
 // Handles GET /organizers?search=...
 // An empty list means no organizer matches, so the frontend can show its empty message.
-export function listOrganizersController(store: OrganizerStore) {
+export function listOrganizersController(store: ManagedOrganizerStore) {
   return async function listOrganizers(request: Request, response: Response) {
     // Gets the search text from the query parameters.
     const search = typeof request.query.search === "string" ? request.query.search : undefined;
@@ -12,6 +12,7 @@ export function listOrganizersController(store: OrganizerStore) {
     try {
       // Gets the organizers that match the search text.
       const organizers = await store.list(search);
+      // Sends the matching organizers with a 200 success status.
       response.status(200).json({ organizers });
     } catch (error) {
       // Returns an error if loading the organizers fails.
@@ -22,7 +23,7 @@ export function listOrganizersController(store: OrganizerStore) {
 }
 
 // Handles GET /organizers/:id. Used to pre-fill the Edit User page.
-export function getOrganizerController(store: OrganizerStore) {
+export function getOrganizerController(store: ManagedOrganizerStore) {
   return async function getOrganizer(request: Request, response: Response) {
     try {
       // Gets the organizer using the ID from the URL.
@@ -46,7 +47,7 @@ export function getOrganizerController(store: OrganizerStore) {
 
 // Handles PATCH /organizers/:id.
 // Same required fields and rules as create, so both names must be sent.
-export function updateOrganizerController(store: OrganizerStore) {
+export function updateOrganizerController(store: ManagedOrganizerStore) {
   return async function updateOrganizer(request: Request, response: Response) {
     // Checks if the submitted organizer information is valid.
     const result = validateOrganizerInput(request.body);
