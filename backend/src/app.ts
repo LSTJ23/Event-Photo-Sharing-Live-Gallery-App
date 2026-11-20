@@ -1,11 +1,13 @@
 import express from "express";
-import { createOrganizerController } from "./controllers/createOrganizerController.js";
 import {
   getOrganizerController,
   listOrganizersController,
   updateOrganizerController
 } from "./controllers/manageOrganizersController.js";
-import { createPlaceholderOrganizerStore, type OrganizerStore } from "./organizerStore.js";
+import {
+  createPlaceholderManagedOrganizerStore,
+  type ManagedOrganizerStore
+} from "./managedOrganizerStore.js";
 
 export interface Database {
   query(sql: string): Promise<unknown>;
@@ -13,7 +15,7 @@ export interface Database {
 
 export function createApp(
   database: Database,
-  organizerStore: OrganizerStore = createPlaceholderOrganizerStore()
+  organizerStore: ManagedOrganizerStore = createPlaceholderManagedOrganizerStore()
 ) {
   const app = express();
 
@@ -30,8 +32,6 @@ export function createApp(
   });
 
   // TODO: put the admin auth middleware in front of the organizer routes.
-  // All organizer routes share one store, so a created organizer shows up in the list.
-  app.post("/organizers", createOrganizerController(organizerStore));
   app.get("/organizers", listOrganizersController(organizerStore));
   app.get("/organizers/:id", getOrganizerController(organizerStore));
   app.patch("/organizers/:id", updateOrganizerController(organizerStore));

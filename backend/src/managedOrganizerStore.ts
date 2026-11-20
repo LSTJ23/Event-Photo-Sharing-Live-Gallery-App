@@ -1,24 +1,37 @@
 import { randomUUID } from "node:crypto";
-import {
-  DuplicateOrganizerError,
-  type Organizer,
-  type OrganizerStore
-} from "./controllers/createOrganizerController.js";
 import type { OrganizerInput } from "./organizerValidation.js";
 
-// Everything the create controller needs, plus what the Manage Users page needs.
-export interface ManagedOrganizerStore extends OrganizerStore {
+// Stores the organizer's information along with its ID and creation date.
+export interface Organizer extends OrganizerInput {
+  id: string;
+  createdAt: string;
+}
+
+// Error thrown when an organizer name is already being used.
+export class DuplicateOrganizerError extends Error {
+  constructor() {
+    super("An organizer with this name already exists.");
+  }
+}
+
+// Defines the functions that the organizer store must provide.
+// The in-memory store can later be replaced with a Supabase implementation.
+export interface ManagedOrganizerStore {
+  // Adds a new organizer.
+  create(input: OrganizerInput): Promise<Organizer>;
   // Returns organizers whose name contains `search` (case-insensitive), sorted A-Z.
   // No search text returns everyone.
   list(search?: string): Promise<Organizer[]>;
   // Gets an organizer using its ID.
+  // Returns null if the organizer does not exist.
   getById(id: string): Promise<Organizer | null>;
-  // Returns null when the organizer does not exist.
+  // Updates an organizer's information using its ID.
+  // Returns null if the organizer does not exist.
   update(id: string, input: OrganizerInput): Promise<Organizer | null>;
 }
 
 // Temporary in-memory store until Supabase is implemented.
-// It also provides create(), so the create route and the manage routes share one list.
+// create() is included so one store can serve both the create route and the manage routes.
 export function createPlaceholderManagedOrganizerStore(): ManagedOrganizerStore {
   // Holds all organizer records while the application is running.
   const organizers: Organizer[] = [];
@@ -39,6 +52,8 @@ export function createPlaceholderManagedOrganizerStore(): ManagedOrganizerStore 
 
       // Creates a new organizer with a unique ID and creation date.
       const organizer: Organizer = { id: randomUUID(), createdAt: new Date().toISOString(), ...input };
+
+      // Saves the organizer in the list.
       organizers.push(organizer);
       return { ...organizer };
     },
