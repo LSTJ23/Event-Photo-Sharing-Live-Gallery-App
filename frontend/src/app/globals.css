@@ -1,5 +1,4 @@
 :root {
-
   color-scheme: light;
   --font: Inter, "Helvetica Neue", Arial, Helvetica, sans-serif;
   --ink: #111111;
@@ -77,7 +76,6 @@ img {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
   font-family: system-ui, -apple-system, sans-serif;
-
 }
 
 @keyframes gradientBG {
@@ -376,4 +374,165 @@ img {
 .upload-area:hover {
   background: rgba(255, 255, 255, 0.9);
   border-color: var(--primary);
+}
+
+
+/* =======================================================
+   PORTAL
+   ======================================================= */
+
+.portal-theme .glass-card {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 0;
+  box-shadow: 12px 12px 0px 0px #000000;
+  color: #000000;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.portal-theme h1 {
+  text-transform: uppercase;
+}
+
+.portal-theme p {
+  color: #555555;
+}
+
+.portal-theme .app-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #555555;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.portal-theme .close-btn {
+  border: 2px solid #000000;
+  border-radius: 0;
+  background: #ffffff;
+  color: #000000;
+}
+
+.portal-theme .close-btn:hover {
+  background: #000000;
+  color: #ffffff;
+  transform: rotate(90deg);
+}
+
+.portal-theme .form-layout {
+  position: relative;
+  z-index: 50; /* Dropdown overlap fix */
+}
+
+.portal-theme .input-group label {
+  font-size: 0.75rem;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+
+.portal-theme .input-field {
+  border: 2px solid #000000;
+  border-radius: 0;
+  background: #ffffff;
+  color: #000000;
+}
+
+.portal-theme .input-field:focus {
+  border-color: #000000;
+  box-shadow: 4px 4px 0px 0px #000000;
+  transform: translateY(-2px);
+}
+
+.portal-theme .dropdown-header {
+  border: 2px solid #000000;
+  border-radius: 0;
+  background: #ffffff;
+  color: #000000;
+}
+
+.portal-theme .dropdown-header:hover, 
+.portal-theme .dropdown-header.active {
+  border-color: #000000;
+  box-shadow: 4px 4px 0px 0px #000000;
+  background: #ffffff;
+}
+
+.portal-theme .dropdown-list {
+  border: 2px solid #000000;
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: 8px 8px 0px 0px #000000;
+}
+
+.portal-theme .dropdown-list::-webkit-scrollbar-thumb {
+  background: #000000;
+}
+
+.portal-theme .dropdown-item {
+  border-bottom: 1px solid #eeeeee;
+}
+
+.portal-theme .dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.portal-theme .dropdown-item:hover {
+  background: #000000;
+  color: #ffffff;
+}
+
+.portal-theme .btn-primary {
+  border: 2px solid #000000;
+  border-radius: 0;
+  background-color: #000000;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  box-shadow: none;
+  font-weight: 700;
+}
+
+.portal-theme .btn-primary:hover {
+  background-color: #ffffff;
+  color: #000000;
+  box-shadow: 6px 6px 0px 0px #000000;
+  transform: translateY(-2px);
+}
+
+.portal-theme .btn-primary:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.portal-theme .text-link {
+  color: #000000;
+  text-decoration: underline;
+  font-weight: 700;
+}
+
+.portal-theme .text-link:hover {
+  opacity: 0.7;
+}
+
+.portal-theme .dashboard-form {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 0;
+}
+
+.portal-theme .upload-area {
+  border: 2px dashed #000000;
+  background: #f9f9f9;
+  border-radius: 0;
+}
+
+.portal-theme .upload-area:hover {
+  background: #ffffff;
+  border-color: #000000;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
