@@ -69,17 +69,12 @@ export default function AppPortal() {
   const [view, setView] = useState("home");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("attendee");
+  const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
 
-  const loginRoles = [
-    { label: "Attendee", value: "attendee" },
-    { label: "Organizer", value: "organizer" },
+  const managementRoles = [
+    { label: "Event Organizer", value: "organizer" },
     { label: "System Admin", value: "admin" }
-  ];
-
-  const registerRoles = [
-    { label: "Organizer", value: "organizer" }
   ];
 
   const handleAuth = (e: React.FormEvent, targetView: string) => {
@@ -91,18 +86,18 @@ export default function AppPortal() {
     }, 1200);
   };
 
-  const handleOpenLogin = () => {
-    setRole("attendee");
+  const handleOpenUserLogin = () => {
+    setRole("user");
     setName("");
     setEmail("");
-    setView("login");
+    setView("login_user");
   };
 
-  const handleOpenRegister = () => {
+  const handleOpenAdminLogin = () => {
     setRole("organizer");
     setName("");
     setEmail("");
-    setView("register");
+    setView("login_admin");
   };
 
   if (view === "home") {
@@ -113,15 +108,15 @@ export default function AppPortal() {
           <h1 className="stagger-1">Event Portal</h1>
           <p className="stagger-2">Access the live event gallery and connect instantly.</p>
           <div className="stagger-3 button-group">
-            <button onClick={handleOpenLogin} className="btn-primary" style={{ width: '100%' }}>
-              Enter Portal
+            <button onClick={handleOpenUserLogin} className="btn-primary" style={{ width: '100%' }}>
+              User Login
             </button>
             <button 
-              onClick={handleOpenRegister} 
+              onClick={handleOpenAdminLogin} 
               className="btn-primary" 
               style={{ width: '100%', backgroundColor: '#ffffff', color: '#000000' }}
             >
-              EO Registration
+              EO / Admin Login
             </button>
           </div>
         </div>
@@ -129,7 +124,7 @@ export default function AppPortal() {
     );
   }
 
-  if (view === "login") {
+  if (view === "login_user") {
     return (
       <div className="glass-container portal-theme">
         <div className="glass-card">
@@ -137,9 +132,9 @@ export default function AppPortal() {
             <CloseIcon />
           </button>
           <div className="app-title stagger-1">Event Photo Sharing</div>
-          <h1 className="stagger-1">Access</h1>
+          <h1 className="stagger-1">Participant Access</h1>
           <p className="stagger-1">Enter your details to securely access the event.</p>
-          <form className="form-layout stagger-2" onSubmit={(e) => handleAuth(e, role)}>
+          <form className="form-layout stagger-2" onSubmit={(e) => handleAuth(e, "gallery")}>
             <div className="input-group">
               <label htmlFor="login-name">Full Name</label>
               <input
@@ -164,27 +159,16 @@ export default function AppPortal() {
                 required
               />
             </div>
-            <div className="input-group">
-              <label>Logging in as</label>
-              <CustomDropdown 
-                options={loginRoles} 
-                value={role} 
-                onChange={setRole} 
-              />
-            </div>
             <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? "Authenticating..." : "Enter"}
+              {loading ? "Authenticating..." : "Enter Portal"}
             </button>
           </form>
-          <p className="text-center mt-4 stagger-3" style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            New Event Organizer? <button type="button" onClick={handleOpenRegister} className="text-link">Register Here</button>
-          </p>
         </div>
       </div>
     );
   }
 
-  if (view === "register") {
+  if (view === "login_admin") {
     return (
       <div className="glass-container portal-theme">
         <div className="glass-card">
@@ -192,14 +176,14 @@ export default function AppPortal() {
             <CloseIcon />
           </button>
           <div className="app-title stagger-1">Event Photo Sharing</div>
-          <h1 className="stagger-1">EO Register</h1>
-          <p className="stagger-1">Sign up as an Event Organizer to create and manage galleries.</p>
+          <h1 className="stagger-1">Management Access</h1>
+          <p className="stagger-1">Log in to manage events, galleries, and system settings.</p>
           <form className="form-layout stagger-2" onSubmit={(e) => handleAuth(e, role)}>
             <div className="input-group">
-              <label htmlFor="reg-name">Full Name</label>
+              <label htmlFor="admin-name">Full Name</label>
               <input
                 type="text"
-                id="reg-name"
+                id="admin-name"
                 className="input-field"
                 placeholder="Juana Sarmiento Ebardaloza"
                 value={name}
@@ -208,10 +192,10 @@ export default function AppPortal() {
               />
             </div>
             <div className="input-group">
-              <label htmlFor="reg-email">Email Address</label>
+              <label htmlFor="admin-email">Email Address</label>
               <input
                 type="email"
-                id="reg-email"
+                id="admin-email"
                 className="input-field"
                 placeholder="juana.sarmiento.ebardaloza@gmail.com"
                 value={email}
@@ -220,20 +204,17 @@ export default function AppPortal() {
               />
             </div>
             <div className="input-group">
-              <label>Registering as</label>
+              <label>Logging in as</label>
               <CustomDropdown 
-                options={registerRoles} 
+                options={managementRoles} 
                 value={role} 
                 onChange={setRole} 
               />
             </div>
             <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? "Registering..." : "Create Account"}
+              {loading ? "Authenticating..." : "Login to Dashboard"}
             </button>
           </form>
-          <p className="text-center mt-4 stagger-3" style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            Already an Organizer? <button type="button" onClick={handleOpenLogin} className="text-link">Log in</button>
-          </p>
         </div>
       </div>
     );
