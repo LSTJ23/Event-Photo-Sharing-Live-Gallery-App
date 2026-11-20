@@ -62,25 +62,39 @@ Routes in `frontend/src/app`:
 | `/e/<eventId>/gallery` | 04 Event gallery (All Photos / Live Gallery; `?view=live` opens Live Gallery) |
 | `/e/<eventId>/photos/<photoId>` | 05 Single photo |
 
-Organizer gallery pages (phone and desktop), in `frontend/src/app/admin`:
-
-| Route | Screen |
-| --- | --- |
-| `/admin/e/<eventId>` | 06 Admin gallery (All Photos / Live Gallery), with 07–08 the share-link dialog. The share-link dialog also shows the event's QR code, with a Download QR Code button. |
-| `/admin/e/<eventId>/manage` | 09 Manage gallery: gallery details, share link and QR code (with download), remove photos (09b confirmation) |
-
-Organizer dashboard (phone and desktop), in `frontend/src/app/(organizer)` with its own top bar and styles:
+Organizer dashboard (phone and desktop), in `frontend/src/app/(organizer)`:
 
 | Route | Screen |
 | --- | --- |
 | `/events` | The organizer's events: Gallery, Analytics, QR code, and reported photos to review |
 | `/events/<eventId>/analytics` | Photos, participants, photos per hour, and the photo limit |
 | `/events/<eventId>/qr` | The event's QR code and share link (copy or download) |
+| `/events/<eventId>/gallery` | 06 The event's gallery (All Photos / Live Gallery), with 07–08 the share-link dialog and QR code |
+| `/events/<eventId>/gallery/manage` | 09 Manage gallery: details, share link and QR code, remove photos (09b confirmation) |
 | `/reports` and `/reports/<id>` | Reported photos, and one report with Delete photo / Keep photo |
 | `/login` | Placeholder "Logged out" page until the login page exists |
 
-QR codes are drawn by `frontend/src/lib/qr.ts` (no extra packages needed). Only organizers can open the organizer pages (`getCurrentUser().role` in `frontend/src/lib/currentUser.ts`, set by login). The backend must check this too.
+Admin dashboard (phone and desktop), in `frontend/src/app/admin`, with a sidebar (a menu on phones). Admins create events and choose the event organizer for each one (the organizer gets an email invite), and create and edit organizer accounts. They can see reported photos, but only the event's organizer can keep or remove them.
 
+| Route | Screen |
+| --- | --- |
+| `/admin` | Home: Needs your attention (reported photos waiting for an organizer, galleries nearly full, events with no start time, unaccepted invites), Create Event, Manage Events, Create User, Manage Users, and the Report Logs overview |
+| `/admin/events` | Manage Events: Current and Past events tabs, search, and Edit / Gallery / QR on each event |
+| `/admin/events/<id>/gallery` | The event's photos and share link, inside the admin (view-only) |
+| `/admin/events/<id>/qr` | The event's QR code: copy the link or download the code |
+| `/admin/events/create` | Create Event: name, venue, organizer, photo capacity, and when it starts and ends (date and time each; hashtag optional) |
+| `/admin/events/<id>/edit` | Edit Event |
+| `/admin/users` | Manage Users: search, and Edit on each organizer |
+| `/admin/users/create` | Create User: organizer name, person name, email |
+| `/admin/users/<id>/edit` | Edit User |
+| `/admin/reports` | Report Logs: totals and reported photos (view-only). Click a photo for details in a popup |
+| `/admin/analytics` | Analytics: photos shared, Top Organizers (click one for details) and photos per event |
+
+Until the API exists, the admin pages use sample data from `frontend/src/lib/adminData.ts`, kept in memory by `frontend/src/components/admin/AdminStore.tsx` (each action there is marked for the backend).
+
+Who can open what is set by `getCurrentUser().role` in `frontend/src/lib/currentUser.ts` (filled in by login): admins can open everything, organizers the organizer pages, participants neither. The backend must check this too.
+
+QR codes are drawn by `frontend/src/lib/qr.ts` (no extra packages needed).
 There are no event codes: participants join by opening the share link or scanning the QR code. Safari and Firefox can't scan QR codes inside a web page, so on those browsers people scan the QR code with their phone's Camera app, which opens the share link.
 
 Until the API exists, the frontend uses in-browser mock data from `frontend/src/lib/mockApi.ts`. Try it by opening `http://localhost:3000/e/dlsu-cso-event`. To use the real API, set `NEXT_PUBLIC_API_URL` in `frontend/.env.local` (see `.env.example`); the routes it expects are listed at the top of `frontend/src/lib/api.ts`.

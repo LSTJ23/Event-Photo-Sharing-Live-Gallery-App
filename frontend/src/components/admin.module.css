@@ -1,5 +1,5 @@
-/* Admin pages: desktop layout. Sizes follow the Figma frames 06–09b
-   (1440px wide: a 1200px content column, 70px top bar). */
+/* Organizer gallery pages (event gallery, manage gallery, their dialogs), shown
+   inside the organizer dashboard's frame. Sizes follow the Figma frames 06–09b. */
 
 .page {
   /* flow-root keeps the last element's bottom margin inside the white page. */
@@ -7,57 +7,6 @@
   min-height: 100dvh;
   background: var(--surface);
   color: var(--ink);
-}
-
-.container {
-  width: 100%;
-  max-width: calc(1200px + 4rem);
-  margin: 0 auto;
-  padding: 0 2rem;
-}
-
-/* ---------- Top bar ---------- */
-
-.topBar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-bottom: 1px solid #ececec;
-  background: var(--surface);
-}
-
-.topBarInner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  height: 70px;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin: 0;
-  color: var(--ink);
-  font-size: 1rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.rolePill {
-  padding: 0.2rem 0.6rem;
-  border: 1px solid #e3e3e3;
-  border-radius: 999px;
-  color: var(--ink-faint);
-  font-size: 0.72rem;
-  font-weight: 400;
-}
-
-.topActions {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
 }
 
 /* ---------- Buttons ---------- */
@@ -130,14 +79,18 @@
 
 .eventHeader {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding-top: 2.5rem;
 }
 
-.eventHeaderAfterBack {
-  padding-top: 1rem;
+/* Manage gallery and Copy Public Share Link, beside the event name. */
+.headerActions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .eventTitleRow {
@@ -256,7 +209,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  margin-top: 2rem;
+  margin-bottom: 0.6rem;
   color: var(--ink);
   font-size: 0.85rem;
   text-decoration: none;
@@ -649,18 +602,6 @@
 }
 
 @media (max-width: 640px) {
-  .container {
-    padding: 0 max(1rem, env(safe-area-inset-right)) 0 max(1rem, env(safe-area-inset-left));
-  }
-
-  .topBar {
-    padding-top: env(safe-area-inset-top);
-  }
-
-  .topBarInner {
-    height: 56px;
-  }
-
   .btnLabel {
     position: absolute;
     width: 1px;
@@ -670,13 +611,9 @@
     white-space: nowrap;
   }
 
-  .topActions .btnDark {
+  .headerActions .btnDark {
     width: 2.5rem;
     padding: 0;
-  }
-
-  .backLink {
-    margin-top: 1.25rem;
   }
 
   .eventName,
