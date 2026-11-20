@@ -107,7 +107,7 @@ export default function AppPortal() {
 
   if (view === "home") {
     return (
-      <main className="glass-container">
+      <main className="glass-container portal-theme">
         <div className="glass-card" style={{ maxWidth: '640px' }}>
           <div className="app-title stagger-1">Event Photo Sharing</div>
           <h1 className="stagger-1">Event Portal</h1>
@@ -131,7 +131,7 @@ export default function AppPortal() {
 
   if (view === "login") {
     return (
-      <div className="glass-container">
+      <div className="glass-container portal-theme">
         <div className="glass-card">
           <button className="close-btn" onClick={() => setView("home")}>
             <CloseIcon />
@@ -186,7 +186,7 @@ export default function AppPortal() {
 
   if (view === "register") {
     return (
-      <div className="glass-container">
+      <div className="glass-container portal-theme">
         <div className="glass-card">
           <button className="close-btn" onClick={() => setView("home")}>
             <CloseIcon />
@@ -241,7 +241,7 @@ export default function AppPortal() {
 
   if (view === "admin") {
     return (
-      <div className="glass-container">
+      <div className="glass-container portal-theme">
         <div className="glass-card" style={{ maxWidth: "600px" }}>
           <button className="close-btn" onClick={() => setView("home")}>
             <CloseIcon />
@@ -269,7 +269,7 @@ export default function AppPortal() {
 
   if (view === "organizer") {
     return (
-      <div className="glass-container">
+      <div className="glass-container portal-theme">
         <div className="glass-card" style={{ maxWidth: "600px" }}>
           <button className="close-btn" onClick={() => setView("home")}>
             <CloseIcon />
@@ -296,7 +296,7 @@ export default function AppPortal() {
   }
 
   return (
-    <div className="glass-container">
+    <div className="glass-container portal-theme">
       <div className="glass-card" style={{ maxWidth: "600px" }}>
         <button className="close-btn" onClick={() => setView("home")}>
           <CloseIcon />
@@ -312,7 +312,7 @@ export default function AppPortal() {
           <div className="input-group">
             <label>Select Photo</label>
             <div className="upload-area">
-              <span style={{ color: 'var(--text-light)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem' }}>Tap or drag image here</span>
+              <span style={{ color: '#555555', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem' }}>Tap or drag image here</span>
             </div>
           </div>
           <div className="button-group">
