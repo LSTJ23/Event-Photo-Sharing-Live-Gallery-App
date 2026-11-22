@@ -67,9 +67,12 @@ const CustomDropdown = ({ options, value, onChange }: CustomDropdownProps) => {
 
 export default function AppPortal() {
   const [view, setView] = useState("home");
+  
+  // States for forms
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("user");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("organizer"); 
   const [loading, setLoading] = useState(false);
 
   const managementRoles = [
@@ -87,36 +90,35 @@ export default function AppPortal() {
   };
 
   const handleOpenUserLogin = () => {
-    setRole("user");
     setName("");
     setEmail("");
     setView("login_user");
   };
 
   const handleOpenAdminLogin = () => {
-    setRole("organizer");
-    setName("");
     setEmail("");
+    setPassword("");
+    setRole("organizer");
     setView("login_admin");
   };
 
   if (view === "home") {
     return (
       <main className="glass-container portal-theme">
-        <div className="glass-card" style={{ maxWidth: '640px' }}>
+        <div className="glass-card" style={{ maxWidth: '500px' }}>
           <div className="app-title stagger-1">Event Photo Sharing</div>
           <h1 className="stagger-1">Event Portal</h1>
           <p className="stagger-2">Access the live event gallery and connect instantly.</p>
-          <div className="stagger-3 button-group">
+          <div className="stagger-3 button-group" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <button onClick={handleOpenUserLogin} className="btn-primary" style={{ width: '100%' }}>
-              User Login
+              Participant Access
             </button>
             <button 
               onClick={handleOpenAdminLogin} 
               className="btn-primary" 
-              style={{ width: '100%', backgroundColor: '#ffffff', color: '#000000' }}
+              style={{ width: '100%', backgroundColor: '#f5f5f5', color: '#000000', border: '1px solid #e0e0e0', boxShadow: 'none' }}
             >
-              EO / Admin Login
+              Organizer & Admin
             </button>
           </div>
         </div>
@@ -132,8 +134,8 @@ export default function AppPortal() {
             <CloseIcon />
           </button>
           <div className="app-title stagger-1">Event Photo Sharing</div>
-          <h1 className="stagger-1">Participant Access</h1>
-          <p className="stagger-1">Enter your details to securely access the event.</p>
+          <h1 className="stagger-1">Join Gallery</h1>
+          <p className="stagger-1">Enter your details to seamlessly enter the event.</p>
           <form className="form-layout stagger-2" onSubmit={(e) => handleAuth(e, "gallery")}>
             <div className="input-group">
               <label htmlFor="login-name">Full Name</label>
@@ -153,15 +155,17 @@ export default function AppPortal() {
                 type="email"
                 id="login-email"
                 className="input-field"
-                placeholder="juana.sarmiento.ebardaloza@gmail.com"
+                placeholder="juana.sarmiento@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
-            <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? "Authenticating..." : "Enter Portal"}
-            </button>
+            <div style={{ marginTop: '0.5rem' }}>
+              <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%' }}>
+                {loading ? "Connecting..." : "Enter Portal"}
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -176,44 +180,46 @@ export default function AppPortal() {
             <CloseIcon />
           </button>
           <div className="app-title stagger-1">Event Photo Sharing</div>
-          <h1 className="stagger-1">Management Access</h1>
-          <p className="stagger-1">Log in to manage events, galleries, and system settings.</p>
+          <h1 className="stagger-1">Dashboard Access</h1>
+          <p className="stagger-1">Log in securely to manage events and system settings.</p>
           <form className="form-layout stagger-2" onSubmit={(e) => handleAuth(e, role)}>
-            <div className="input-group">
-              <label htmlFor="admin-name">Full Name</label>
-              <input
-                type="text"
-                id="admin-name"
-                className="input-field"
-                placeholder="Juana Sarmiento Ebardaloza"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
             <div className="input-group">
               <label htmlFor="admin-email">Email Address</label>
               <input
                 type="email"
                 id="admin-email"
                 className="input-field"
-                placeholder="juana.sarmiento.ebardaloza@gmail.com"
+                placeholder="admin@events.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="input-group">
-              <label>Logging in as</label>
+              <label htmlFor="admin-password">Password</label>
+              <input
+                type="password"
+                id="admin-password"
+                className="input-field"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="input-group">
+              <label>Select Role</label>
               <CustomDropdown 
                 options={managementRoles} 
                 value={role} 
                 onChange={setRole} 
               />
             </div>
-            <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? "Authenticating..." : "Login to Dashboard"}
-            </button>
+            <div style={{ marginTop: '0.5rem' }}>
+              <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%' }}>
+                {loading ? "Authenticating..." : "Login to Dashboard"}
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -228,7 +234,7 @@ export default function AppPortal() {
             <CloseIcon />
           </button>
           <div className="app-title stagger-1">Event Photo Sharing</div>
-          <h1 className="stagger-1">Admin</h1>
+          <h1 className="stagger-1">System Admin</h1>
           <p className="stagger-1">Configure global server settings and maintenance.</p>
           <form className="dashboard-form stagger-2" onSubmit={(e) => e.preventDefault()}>
             <div className="input-group">
@@ -239,7 +245,7 @@ export default function AppPortal() {
               <label>Global Notification</label>
               <input type="text" className="input-field" placeholder="System maintenance..." />
             </div>
-            <div className="button-group">
+            <div className="button-group" style={{ marginTop: '0.5rem' }}>
               <button type="submit" className="btn-primary" style={{ width: '100%' }}>Update Settings</button>
             </div>
           </form>
@@ -256,7 +262,7 @@ export default function AppPortal() {
             <CloseIcon />
           </button>
           <div className="app-title stagger-1">Event Photo Sharing</div>
-          <h1 className="stagger-1">Setup</h1>
+          <h1 className="stagger-1">Event Setup</h1>
           <p className="stagger-1">Create a new live gallery and configure access.</p>
           <form className="dashboard-form stagger-2" onSubmit={(e) => e.preventDefault()}>
             <div className="input-group">
@@ -267,7 +273,7 @@ export default function AppPortal() {
               <label>Passcode (Optional)</label>
               <input type="password" className="input-field" placeholder="Leave blank for public" />
             </div>
-            <div className="button-group">
+            <div className="button-group" style={{ marginTop: '0.5rem' }}>
               <button type="submit" className="btn-primary" style={{ width: '100%' }}>Create Event</button>
             </div>
           </form>
@@ -276,28 +282,29 @@ export default function AppPortal() {
     );
   }
 
+  // Gallery View (Screen Fit Optimized)
   return (
-    <div className="glass-container portal-theme">
-      <div className="glass-card" style={{ maxWidth: "600px" }}>
+    <div className="glass-container portal-theme" style={{ alignItems: 'flex-start', paddingTop: '2rem' }}>
+      <div className="glass-card" style={{ maxWidth: "600px", margin: "0 auto" }}>
         <button className="close-btn" onClick={() => setView("home")}>
           <CloseIcon />
         </button>
         <div className="app-title stagger-1">Event Photo Sharing</div>
-        <h1 className="stagger-1">Gallery</h1>
+        <h1 className="stagger-1">Live Gallery</h1>
         <p className="stagger-1">Upload your favorite photos to the shared timeline.</p>
         <form className="dashboard-form stagger-2" onSubmit={(e) => e.preventDefault()}>
           <div className="input-group">
             <label>Caption</label>
-            <input type="text" className="input-field" placeholder="Having a great time!" />
+            <input type="text" className="input-field" placeholder="Having a great time! ✨" />
           </div>
           <div className="input-group">
             <label>Select Photo</label>
             <div className="upload-area">
-              <span style={{ color: '#555555', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem' }}>Tap or drag image here</span>
+              <span style={{ color: '#888888', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>Tap or drag image here</span>
             </div>
           </div>
-          <div className="button-group">
-            <button type="submit" className="btn-primary" style={{ width: '100%' }}>Share Photo</button>
+          <div className="button-group" style={{ marginTop: '0.5rem' }}>
+            <button type="submit" className="btn-primary" style={{ width: '100%' }}>Share to Timeline</button>
           </div>
         </form>
       </div>
