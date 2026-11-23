@@ -155,7 +155,7 @@ describe("GET /api/eo/events", () => {
 describe("createApp", () => {
   it("registers the route when the service is provided", async () => {
     // Create the app with a mock organizer events service.
-    const app = createApp(database, {
+    const app = createApp(database, undefined, {
       eoEvents: { findEventsByOrganizer: vi.fn().mockResolvedValue([]) }
     });
 
