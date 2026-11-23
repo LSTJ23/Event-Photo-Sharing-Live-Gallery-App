@@ -3,7 +3,7 @@ services:
     name: event-photo-gallery-api
     env: node
     plan: free
-    buildCommand: cd backend && npm ci && npm run build
+    buildCommand: bash build.sh
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
