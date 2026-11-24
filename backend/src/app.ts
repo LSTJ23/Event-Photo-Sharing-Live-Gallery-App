@@ -1,13 +1,19 @@
 import express from "express";
+import { createEventQrHandler, type EventQrDeps } from "./controllers/eventQrController.js";
 import { checkSupabaseDatabase } from "./supabase.js";
 
 export interface Database {
   query(sql: string): Promise<unknown>;
 }
 
+export interface AppServices {
+  eventQr?: EventQrDeps;
+}
+
 export function createApp(
   database: Database,
-  checkSupabase: () => Promise<void> = checkSupabaseDatabase
+  checkSupabase: () => Promise<void> = checkSupabaseDatabase,
+  services: AppServices = {}
 ) {
   const app = express();
 
@@ -29,6 +35,10 @@ export function createApp(
       response.status(503).json({ status: "error", database: "unavailable" });
     }
   });
+
+  if (services.eventQr) {
+    app.get("/api/events/:id/qr", createEventQrHandler(services.eventQr));
+  }
 
   return app;
 }
