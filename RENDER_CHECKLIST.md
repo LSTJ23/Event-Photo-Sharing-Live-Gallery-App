@@ -12,24 +12,21 @@
 
 ## Deployment Steps
 
-- [ ] Commit and push changes to GitHub:
-  ```bash
-  git add render.yaml RENDER_DEPLOYMENT.md backend/package.json
-  git commit -m "Add Render deployment configuration"
-  git push origin main
-  ```
+- [ ] Commit and push deployment changes to the branch connected to Render
 
 - [ ] Go to [Render Dashboard](https://dashboard.render.com)
 - [ ] Connect GitHub repository to Render (if not already done)
-- [ ] Create new Web Service:
+- [ ] Sync the Blueprint, or configure the existing/new Web Service manually:
   - [ ] Select this repository
   - [ ] Service name: `event-photo-gallery-api`
   - [ ] Environment: `Node`
-  - [ ] Build Command: `npm ci --omit=dev && npm run build --workspace=backend`
-  - [ ] Start Command: `npm start --workspace=backend`
+  - [ ] Root directory: blank (repository root)
+  - [ ] Build Command: `bash build.sh`
+  - [ ] Start Command: `cd backend && npm start`
 
 - [ ] Add Environment Variables in Render:
   - [ ] `NODE_ENV` = `production`
+  - [ ] Node version is 24 (from `.nvmrc`, unless overridden by `NODE_VERSION`)
   - [ ] `PORT` = `3001`
   - [ ] `DATABASE_URL` = your PostgreSQL connection string
   - [ ] `SUPABASE_URL` = your Supabase project URL
@@ -48,7 +45,7 @@
 | Issue | Solution |
 |-------|----------|
 | Build fails | Check logs for Node.js version; ensure Node 24+ requirement |
-| "Cannot find module" | Run `npm ci --omit=dev && npm run build --workspace=backend` locally to verify |
+| Missing TypeScript or types | Run `npm ci --include=dev && npm run build --workspace=backend` locally to verify |
 | Database health check fails | Verify DATABASE_URL format and test connection locally |
 | Supabase health check fails | Verify SUPABASE_URL and SUPABASE_SECRET_KEY are correct |
 | Service keeps restarting | Check logs for runtime errors; verify all env vars are set |
@@ -57,15 +54,12 @@
 
 - **[render.yaml](./render.yaml)** - Render deployment configuration
 - **[RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)** - Detailed deployment guide
-- **[backend/package.json](./backend/package.json)** - Added `start` script
+- **[build.sh](./build.sh)** - Installs dependencies and builds the backend
 
 ## Next Steps After Deployment
 
-1. **Update Frontend**: Point frontend API calls to your Render service URL
-2. **Monitor**: Watch Render logs for any errors
-3. **Test**: Run end-to-end tests through the frontend
-4. **Production**: Consider upgrading to paid Render plan for always-on service
-5. **Database**: Set up backups for your Supabase database
+The service deploys only the backend health checks; it does not deploy or
+connect the mock frontend. See the [README](./README.md) for current app status.
 
 ## Support
 

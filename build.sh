@@ -1,14 +1,10 @@
 #!/bin/bash
 set -e
 
-echo "Installing root dependencies..."
-npm ci
-
-echo "Installing backend dependencies..."
-cd backend
-npm ci
+echo "Installing workspace dependencies, including build tools..."
+npm ci --include=dev
 
 echo "Building backend..."
-npm run build
+npm run build --workspace=backend
 
 echo "Build complete!"
