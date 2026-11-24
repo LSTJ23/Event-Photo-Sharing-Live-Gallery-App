@@ -147,10 +147,22 @@ Both are optional but recommended for full health check coverage.
 
 ## Next Steps
 
-After successful backend deployment:
-The Render service deploys only the backend health checks. The frontend and
-application API flows are still mocks; see the [README](./README.md) for their
-current status. Deploying this service does not deploy or connect the frontend.
+The Render service deploys only the backend health checks. To configure its URL
+in Vercel without breaking the mock photo screens:
+
+1. Push the frontend changes that support `NEXT_PUBLIC_USE_MOCK_API`.
+2. In your Vercel project settings, add `NEXT_PUBLIC_API_URL` with the Render
+   service's HTTPS URL (without `/health`) and `NEXT_PUBLIC_USE_MOCK_API` with
+   the value `true` for the relevant deployment environments.
+3. Redeploy Vercel with the new commit and variables. The URL is configured,
+   but photo requests remain in the browser mock; they do not reach Render.
+
+When the backend implements the event and photo routes listed in
+`frontend/src/lib/api.ts`, supports the required authentication and
+authorization, and allows the Vercel origin through CORS, set
+`NEXT_PUBLIC_USE_MOCK_API` to `false` or remove it and redeploy Vercel.
+Test the real API before switching production. Other mock screens may need
+separate integration; see the [README](./README.md) for current app status.
 
 ## Additional Resources
 

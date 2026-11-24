@@ -167,6 +167,6 @@ Who can open what is set by `getCurrentUser().role` in `frontend/src/lib/current
 QR codes are drawn by `frontend/src/lib/qr.ts` (no extra packages needed).
 There are no event codes: participants join by opening the share link or scanning the QR code. Safari and Firefox can't scan QR codes inside a web page, so on those browsers people scan the QR code with their phone's Camera app, which opens the share link.
 
-Until the API exists, the frontend uses in-browser mock data from `frontend/src/lib/mockApi.ts`. Try it by opening `http://localhost:3000/e/dlsu-cso-event`. To use the real API, set `NEXT_PUBLIC_API_URL` in `frontend/.env.local` (see `.env.example`); the routes it expects are listed at the top of `frontend/src/lib/api.ts`.
+Until the API exists, the frontend uses in-browser mock data from `frontend/src/lib/mockApi.ts`. Try it by opening `http://localhost:3000/e/dlsu-cso-event`. You can configure `NEXT_PUBLIC_API_URL` and set `NEXT_PUBLIC_USE_MOCK_API=true` to keep using mock data while the API is being built (see `.env.example`). When the backend implements the routes listed at the top of `frontend/src/lib/api.ts` and allows your frontend origin through CORS, unset the mock flag or set it to `false` to use the API. Without an API URL, the frontend continues to use mock data. These public variables are embedded at build time, so redeploy after changing them.
 
 The camera only works on `https://` pages or `localhost`.
