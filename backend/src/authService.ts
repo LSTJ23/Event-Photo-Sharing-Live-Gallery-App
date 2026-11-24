@@ -33,12 +33,14 @@ export function createSupabaseAuthService(
       if (!data) return null;
 
       // Organizes the database result into a user object.
+      // The database stores roles in lowercase ('admin', 'organizer'), but the app and
+      // requireRole use uppercase ("ADMIN", "ORGANIZER"), so the role is converted here.
       const user = {
         id: data.id as string,
         name: data.name as string | null,
         username: data.username as string,
         email: data.email as string,
-        role: data.role as Role
+        role: (data.role as string).toUpperCase() as Role
       };
 
       // Generates a JWT containing the user's role and ID.
