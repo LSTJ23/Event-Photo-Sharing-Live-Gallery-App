@@ -72,7 +72,7 @@ describe("22.x - EO reviews reported photos", () => {
 
   it("the menu shows the unread count", () => {
     renderInStore(<ReportsPage />);
-    expect(screen.getAllByLabelText("2 unread").length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText("2 new").length).toBeGreaterThan(0);
   });
 
   it("opening a report marks it as read and lowers the unread count", async () => {
@@ -84,7 +84,7 @@ describe("22.x - EO reviews reported photos", () => {
     expect(probe()).toContain("report1:open:read");
     expect(probe()).toContain("report2:open:unread");
     expect(screen.getAllByLabelText("Unread")).toHaveLength(1);
-    expect(screen.getAllByLabelText("1 unread").length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText("1 new").length).toBeGreaterThan(0);
   });
 
   it("the report page shows the reason, reporter, event and 'Needs review' status", () => {
@@ -176,7 +176,7 @@ describe("21.x - EO events list", () => {
     renderInStore(<EventsPage />);
     const card = screen.getByRole("region", { name: "Event 2" });
 
-    expect(within(card).getByRole("link", { name: /Gallery/ })).toHaveAttribute("href", "/admin/e/event-2");
+    expect(within(card).getByRole("link", { name: /Gallery/ })).toHaveAttribute("href", "/events/event-2/gallery");
     expect(within(card).getByRole("link", { name: /Analytics/ })).toHaveAttribute("href", "/events/event-2/analytics");
     expect(within(card).getByRole("link", { name: /QR code/ })).toHaveAttribute("href", "/events/event-2/qr");
   });

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // Plan tests 17.3 / 17.4 / 17.5 (EO removes a single photo) and
 // 18.6 / 18.7 (EO removes multiple photos).
-// Page under test: /admin/e/<eventId>/manage, using a fake in-memory API.
+// Page under test: /events/<eventId>/gallery/manage (organizer), using a fake in-memory API.
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -26,7 +26,7 @@ vi.mock("@/lib/api", () => ({
 }));
 
 import { EventSession } from "@/components/EventSession";
-import ManageGalleryPage from "@/app/admin/e/[eventId]/manage/page";
+import ManageGalleryPage from "@/app/(organizer)/events/[id]/gallery/manage/page";
 import { removePhotos } from "@/lib/api";
 
 const makePhotos = (n: number): Photo[] =>
