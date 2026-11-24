@@ -1,15 +1,23 @@
 import express from "express";
+import { createLoginHandler, type AuthService } from "./controllers/authController.js";
 import { checkSupabaseDatabase } from "./supabase.js";
 
 export interface Database {
   query(sql: string): Promise<unknown>;
 }
 
+export interface AppServices {
+  auth?: AuthService;
+}
+
 export function createApp(
   database: Database,
-  checkSupabase: () => Promise<void> = checkSupabaseDatabase
+  checkSupabase: () => Promise<void> = checkSupabaseDatabase,
+  services: AppServices = {}
 ) {
   const app = express();
+
+  app.use(express.json());
 
   app.get("/health", (_request, response) => {
     response.status(200).json({ status: "ok" });
@@ -29,6 +37,10 @@ export function createApp(
       response.status(503).json({ status: "error", database: "unavailable" });
     }
   });
+
+  if (services.auth) {
+    app.post("/api/auth/login", createLoginHandler(services.auth));
+  }
 
   return app;
 }
