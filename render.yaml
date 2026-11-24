@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: event-photo-gallery-api
+    env: node
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
