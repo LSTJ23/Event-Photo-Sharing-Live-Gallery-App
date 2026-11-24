@@ -1,5 +1,13 @@
 import express from "express";
-import { checkSupabaseDatabase } from "./supabase.js";
+import {
+  getOrganizerController,
+  listOrganizersController,
+  updateOrganizerController
+} from "./controllers/manageOrganizersController.js";
+import {
+  createPlaceholderManagedOrganizerStore,
+  type ManagedOrganizerStore
+} from "./managedOrganizerStore.js";
 
 export interface Database {
   query(sql: string): Promise<unknown>;
@@ -7,9 +15,12 @@ export interface Database {
 
 export function createApp(
   database: Database,
-  checkSupabase: () => Promise<void> = checkSupabaseDatabase
+  organizerStore: ManagedOrganizerStore = createPlaceholderManagedOrganizerStore()
 ) {
   const app = express();
+
+  // Lets Express read JSON request bodies into request.body.
+  app.use(express.json());
 
   app.get("/health", (_request, response) => {
     response.status(200).json({ status: "ok" });
@@ -20,15 +31,10 @@ export function createApp(
     response.status(200).json({ status: "ok", database: "connected" });
   });
 
-  app.get("/health/supabase", async (_request, response) => {
-    try {
-      await checkSupabase();
-      response.status(200).json({ status: "ok", database: "connected" });
-    } catch (error) {
-      console.error("Supabase database health check failed:", error);
-      response.status(503).json({ status: "error", database: "unavailable" });
-    }
-  });
+  // TODO: put the admin auth middleware in front of the organizer routes.
+  app.get("/organizers", listOrganizersController(organizerStore));
+  app.get("/organizers/:id", getOrganizerController(organizerStore));
+  app.patch("/organizers/:id", updateOrganizerController(organizerStore));
 
   return app;
 }
