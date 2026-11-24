@@ -22,12 +22,3 @@ export function createSupabaseAdminClient(
     }
   });
 }
-
-export async function checkSupabaseDatabase(
-  client: SupabaseClient = createSupabaseAdminClient()
-): Promise<void> {
-  const { error } = await client.from("events").select("id", { head: true }).limit(1);
-  if (error) {
-    throw new Error(`Supabase database check failed: ${error.message}`);
-  }
-}

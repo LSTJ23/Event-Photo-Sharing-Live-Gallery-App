@@ -1,14 +1,15 @@
 import express from "express";
-import { checkSupabaseDatabase } from "./supabase.js";
+import { createEventSlugHandler, type EventSlugDeps } from "./controllers/eventSlugController.js";
 
 export interface Database {
   query(sql: string): Promise<unknown>;
 }
 
-export function createApp(
-  database: Database,
-  checkSupabase: () => Promise<void> = checkSupabaseDatabase
-) {
+export interface AppServices {
+  eventSlug?: EventSlugDeps;
+}
+
+export function createApp(database: Database, services: AppServices = {}) {
   const app = express();
 
   app.get("/health", (_request, response) => {
@@ -20,15 +21,9 @@ export function createApp(
     response.status(200).json({ status: "ok", database: "connected" });
   });
 
-  app.get("/health/supabase", async (_request, response) => {
-    try {
-      await checkSupabase();
-      response.status(200).json({ status: "ok", database: "connected" });
-    } catch (error) {
-      console.error("Supabase database health check failed:", error);
-      response.status(503).json({ status: "error", database: "unavailable" });
-    }
-  });
+  if (services.eventSlug) {
+    app.get("/api/events/slug/:qrSlug", createEventSlugHandler(services.eventSlug));
+  }
 
   return app;
 }
