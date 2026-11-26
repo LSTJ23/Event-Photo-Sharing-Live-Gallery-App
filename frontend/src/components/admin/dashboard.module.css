@@ -103,10 +103,10 @@
   z-index: 20;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 6px;
   height: 56px;
-  padding: 0 8px 0 16px;
+  padding: 0 16px 0 6px;
   padding-top: env(safe-area-inset-top);
   border-bottom: 1px solid var(--line);
   background: #fff;
@@ -323,6 +323,36 @@
   background: #333;
 }
 
+.btnDanger {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--bad);
+  border-radius: 10px;
+  background: var(--bad);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.btnDanger:hover:not(:disabled) {
+  background: var(--danger-hover, #b91c1c);
+}
+
+.btn:disabled,
+.btnDark:disabled,
+.btnDanger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .small {
   min-height: 38px;
   padding: 0 12px;
@@ -388,6 +418,23 @@
 .toneWarn {
   background: var(--warn-bg);
   color: var(--warn);
+}
+
+/* Each kind of "Needs your attention" item has its own color:
+   reported photos red, nearly full amber, missing time blue, invites violet. */
+.toneReport {
+  background: #fdecec;
+  color: #b42318;
+}
+
+.toneTime {
+  background: #e8f1fd;
+  color: #1d5fbf;
+}
+
+.toneInvite {
+  background: #f1ecfd;
+  color: #6b3fc4;
 }
 
 .todoText {
@@ -659,6 +706,67 @@
 
 .itemActions > * {
   flex: 1;
+}
+
+/* Clickable event cards: the title's link covers the whole card; the buttons
+   sit above it so they still work. */
+.itemClickable {
+  position: relative;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.itemClickable:hover {
+  border-color: #cfcfcf;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.07);
+}
+
+.cardLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.cardLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.cardLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.itemClickable .itemActions,
+.itemClickable .pastActions {
+  position: relative;
+  z-index: 1;
+}
+
+/* Past and archived event cards: Gallery, Download, Archive/Restore, Delete. */
+.pastActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.pastActions > * {
+  width: 100%;
+  min-width: 0;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btnDangerText {
+  border-color: #f3c4c5;
+  color: var(--bad);
+}
+
+.btnDangerText:hover {
+  border-color: var(--bad);
+  background: #fdecec;
 }
 
 .person {
@@ -1161,13 +1269,27 @@ select.input {
 
 .toolbar .search {
   flex: 1 1 260px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .tabs {
   display: flex;
+  min-width: 0;
+  max-width: 100%;
   padding: 4px;
   border-radius: 12px;
   background: #ececec;
+  overflow-x: auto;
+  scrollbar-width: none;
+  box-sizing: border-box;
+}
+
+@media (max-width: 400px) {
+  .tabs button {
+    padding: 0 11px;
+    font-size: 13px;
+  }
 }
 
 .tabs button {
@@ -1215,6 +1337,108 @@ select.input {
   border-radius: 10px;
   background: var(--soft);
   object-fit: cover;
+}
+
+/* Selecting photos to delete (admin gallery). */
+.photoSelectable {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.photoSelectable img {
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.photoSelected img {
+  opacity: 0.75;
+  transform: scale(0.94);
+  outline: 3px solid var(--bad);
+  outline-offset: 2px;
+}
+
+.photoCheck {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.25);
+  color: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.3);
+  box-sizing: border-box;
+}
+
+.photoSelected .photoCheck {
+  border-color: var(--bad);
+  background: var(--bad);
+}
+
+.selectBar {
+  position: sticky;
+  top: 64px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.06);
+  font-size: 14px;
+}
+
+@media (min-width: 1024px) {
+  .selectBar {
+    top: 12px;
+  }
+}
+
+.selectBar > span {
+  flex: 1 1 140px;
+  color: var(--muted);
+}
+
+/* Display gallery, QR code and Share link under the title. On a phone Display
+   gallery takes the full row; the other two share the next. */
+.galleryActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.galleryActions > * {
+  width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.displayButton {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 641px) {
+  .galleryActions {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .galleryActions > * {
+    width: auto;
+  }
 }
 
 .photo figcaption {
@@ -1316,6 +1540,114 @@ select.input {
   font-size: 13px;
 }
 
+/* ---------- Analytics: per-event table ---------- */
+
+.tableWrap {
+  position: relative;
+  margin: 0 -4px;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th {
+  padding: 8px 4px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 12px 4px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: top;
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.num.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tableLink {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tableLink:hover {
+  text-decoration: underline;
+}
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sortButton:hover,
+.sortActive {
+  color: var(--ink, #111);
+}
+
+.sortButton span {
+  font-size: 9px;
+}
+
+.sortSelect {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.sortSelect select {
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink, #111);
+  font: inherit;
+  font-size: 13px;
+}
+
+@media (max-width: 599px) {
+  .sortSelect > span {
+    display: none;
+  }
+}
+
+/* Phones: drop the organizer column so the numbers stay in view. */
+@media (max-width: 599px) {
+  .table {
+    min-width: 0;
+  }
+
+  .colOrg {
+    display: none;
+  }
+}
+
 /* ---------- Analytics: photos per event bars ---------- */
 
 .barRow {
@@ -1341,6 +1673,11 @@ select.input {
 .barTop > span {
   flex: none;
   font-variant-numeric: tabular-nums;
+}
+
+.barTop > .ellipsis {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .barTrack {
@@ -1546,18 +1883,28 @@ select.input {
 
 .toast {
   position: fixed;
+  top: 50%;
   left: 50%;
-  bottom: calc(24px + env(safe-area-inset-bottom));
   z-index: 60;
-  max-width: calc(100vw - 32px);
-  padding: 12px 18px;
-  border-radius: 999px;
-  background: var(--ink, #111);
+  max-width: calc(100vw - 48px);
+  padding: 14px 22px;
+  border-radius: 14px;
+  background: rgb(17 17 17 / 0.92);
   color: #fff;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   text-align: center;
-  transform: translateX(-50%);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.25);
   box-sizing: border-box;
+  pointer-events: none;
+  animation: toastIn 0.18s ease-out;
+}
+
+/* Messages pop up in the middle of the screen. */
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.94);
+  }
 }

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CalendarIcon, SearchIcon } from "@/components/icons";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { DownloadPhotosButton } from "@/components/DownloadPhotosButton";
+import { ArchiveIcon, CalendarIcon, RestoreIcon, SearchIcon, TrashIcon } from "@/components/icons";
 import { PageHeader } from "@/components/admin/AdminShell";
+import { useFrom, useHere, withFrom } from "@/components/admin/useBackTo";
 import { useAdminStore } from "@/components/admin/AdminStore";
 import styles from "@/components/admin/dashboard.module.css";
-import { formatWhen, isPast, matches, type AdminEvent } from "@/lib/adminData";
-
-type Tab = "current" | "past";
+import { eventTab, formatWhen, matches, type AdminEvent, type EventTab } from "@/lib/adminData";
 
 function StatusPill({ status }: { status: AdminEvent["status"] }) {
   if (status === "LIVE")
@@ -20,21 +21,31 @@ function StatusPill({ status }: { status: AdminEvent["status"] }) {
   return <span className={styles.pill}>{status === "UPCOMING" ? "Upcoming" : "Ended"}</span>;
 }
 
-/** Every event as a card, with Edit, Gallery and QR. Current and past events are on separate tabs. */
+/**
+ * Every event as a card. Current events: Edit, Gallery, QR. Past and archived
+ * events: Gallery, Download all photos, Archive or Restore, and Delete.
+ */
 export default function ManageEventsPage() {
-  const { events, getOrganizer } = useAdminStore();
-  const [tab, setTab] = useState<Tab>("current");
+  const { events, getOrganizer, notify, archiveEvent, restoreEvent, deleteEvent } = useAdminStore();
+  const from = useFrom();
+  const here = useHere();
+  // Opened from another page (e.g. the dashboard): links keep that, so Back finds its way home.
+  const to = (href: string) => (from ? withFrom(href, here) : href);
+  const [tab, setTab] = useState<EventTab>("current");
   const [query, setQuery] = useState("");
-  const inTab = events.filter((e) => (tab === "past" ? isPast(e) : !isPast(e)));
+  const [deleting, setDeleting] = useState<AdminEvent | null>(null);
+  const [archiving, setArchiving] = useState<{ event: AdminEvent; restore: boolean } | null>(null);
+  const inTab = events.filter((e) => eventTab(e) === tab);
   const shown = inTab.filter((e) => matches(query, e.name, e.venue, e.hashtag, getOrganizer(e.organizerId)?.org));
-  const counts = { current: events.filter((e) => !isPast(e)).length, past: events.filter(isPast).length };
+  const count = (t: EventTab) => events.filter((e) => eventTab(e) === t).length;
 
   return (
     <>
       <PageHeader
         title="Manage Events"
+        back={from}
         action={
-          <Link href="/admin/events/create" className={styles.btnDark}>
+          <Link href={withFrom("/admin/events/create", here)} className={styles.btnDark}>
             + Create event
           </Link>
         }
@@ -43,10 +54,13 @@ export default function ManageEventsPage() {
       <div className={styles.toolbar}>
         <div className={styles.tabs} role="tablist" aria-label="Which events">
           <button type="button" role="tab" aria-selected={tab === "current"} onClick={() => setTab("current")}>
-            Current · {counts.current}
+            Current · {count("current")}
           </button>
           <button type="button" role="tab" aria-selected={tab === "past"} onClick={() => setTab("past")}>
-            Past events · {counts.past}
+            Past events · {count("past")}
+          </button>
+          <button type="button" role="tab" aria-selected={tab === "archived"} onClick={() => setTab("archived")}>
+            Archived · {count("archived")}
           </button>
         </div>
         <label className={styles.search}>
@@ -57,14 +71,20 @@ export default function ManageEventsPage() {
 
       {shown.length === 0 ? (
         <p className={styles.empty}>
-          {query ? "No events match your search." : tab === "past" ? "No past events yet." : "No current events. Create one to get started."}
+          {query
+            ? "No events match your search."
+            : tab === "past"
+              ? "No past events yet. Events show up here once they end."
+              : tab === "archived"
+                ? "No archived events."
+                : "No current events. Create one to get started."}
         </p>
       ) : (
         <div className={styles.grid} role="tabpanel">
           {shown.map((e) => {
             const org = getOrganizer(e.organizerId);
             return (
-              <article key={e.id} className={styles.item}>
+              <article key={e.id} className={`${styles.item} ${styles.itemClickable}`}>
                 {e.covers.length > 0 ? (
                   <div className={styles.cover} aria-hidden="true">
                     {e.covers.map((c, i) => (
@@ -78,7 +98,11 @@ export default function ManageEventsPage() {
                 )}
                 <div className={styles.itemBody}>
                   <div className={styles.itemTop}>
-                    <h2 className={styles.itemTitle}>{e.name}</h2>
+                    <h2 className={styles.itemTitle}>
+                      <Link href={to(`/admin/events/${e.id}/gallery`)} className={styles.cardLink}>
+                        {e.name}
+                      </Link>
+                    </h2>
                     <StatusPill status={e.status} />
                   </div>
                   <span className={styles.itemMeta}>
@@ -90,22 +114,81 @@ export default function ManageEventsPage() {
                     {org ? `${org.org} · ` : ""}
                     {e.photoCount} / {e.capacity} photos
                   </span>
-                  <div className={styles.itemActions}>
-                    <Link href={`/admin/events/${e.id}/edit`} className={`${styles.btn} ${styles.small}`}>
-                      Edit
-                    </Link>
-                    <Link href={`/admin/events/${e.id}/gallery`} className={`${styles.btn} ${styles.small}`}>
-                      Gallery
-                    </Link>
-                    <Link href={`/admin/events/${e.id}/qr`} className={`${styles.btn} ${styles.small}`}>
-                      QR
-                    </Link>
-                  </div>
+                  {tab === "current" ? (
+                    <div className={styles.itemActions}>
+                      <Link href={to(`/admin/events/${e.id}/edit`)} className={`${styles.btn} ${styles.small}`}>
+                        Edit
+                      </Link>
+                      <Link href={to(`/admin/events/${e.id}/gallery`)} className={`${styles.btn} ${styles.small}`}>
+                        Gallery
+                      </Link>
+                      <Link href={to(`/admin/events/${e.id}/qr`)} className={`${styles.btn} ${styles.small}`}>
+                        QR
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className={styles.pastActions}>
+                      <Link href={to(`/admin/events/${e.id}/gallery`)} className={`${styles.btn} ${styles.small}`}>
+                        Gallery
+                      </Link>
+                      <DownloadPhotosButton
+                        eventId={e.id}
+                        eventName={e.name}
+                        label="Download"
+                        className={`${styles.btn} ${styles.small}`}
+                        onDone={notify}
+                      />
+                      {e.archived ? (
+                        <button type="button" className={`${styles.btn} ${styles.small}`} onClick={() => setArchiving({ event: e, restore: true })}>
+                          <RestoreIcon /> Restore
+                        </button>
+                      ) : (
+                        <button type="button" className={`${styles.btn} ${styles.small}`} onClick={() => setArchiving({ event: e, restore: false })}>
+                          <ArchiveIcon /> Archive
+                        </button>
+                      )}
+                      <button type="button" className={`${styles.btn} ${styles.small} ${styles.btnDangerText}`} onClick={() => setDeleting(e)}>
+                        <TrashIcon /> Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               </article>
             );
           })}
         </div>
+      )}
+      {archiving && (
+        <ConfirmDialog
+          title={`${archiving.restore ? "Restore" : "Archive"} ${archiving.event.name}?`}
+          text={
+            archiving.restore
+              ? "It moves back to Past events."
+              : "It moves to the Archived tab. Its photos are kept, and you can restore it anytime."
+          }
+          confirmLabel={archiving.restore ? "Restore" : "Archive"}
+          icon={archiving.restore ? <RestoreIcon size={20} /> : <ArchiveIcon size={20} />}
+          onConfirm={() => {
+            if (archiving.restore) restoreEvent(archiving.event.id);
+            else archiveEvent(archiving.event.id);
+            setArchiving(null);
+          }}
+          onClose={() => setArchiving(null)}
+        />
+      )}
+      {deleting && (
+        <ConfirmDialog
+          title={`Delete ${deleting.name}?`}
+          text="The event and all its photos will be deleted for everyone, including the organizer. Download the photos first if you want to keep them. This can't be undone."
+          confirmLabel="Delete event"
+          danger
+          icon={<TrashIcon size={20} />}
+          onConfirm={() => {
+            deleteEvent(deleting.id);
+            setDeleting(null);
+          }}
+          onClose={() => setDeleting(null)}
+        />
       )}
     </>
   );

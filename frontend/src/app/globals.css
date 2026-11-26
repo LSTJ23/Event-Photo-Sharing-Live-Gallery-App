@@ -36,7 +36,6 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  overflow-x: hidden; 
 }
 
 body {
@@ -44,13 +43,23 @@ body {
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+}
+
+/* The login and sign-up page's own look (/portal): its background, text
+   colour and layout. Kept on that page only (see app/portal/layout.tsx) so the
+   rest of the app keeps its own look. Please add login-page styles here, or to
+   the glass-* classes below, rather than to body. */
+.portal-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
   background: linear-gradient(-45deg, var(--bg-gradient-1), var(--bg-gradient-2), var(--bg-gradient-3), var(--bg-gradient-4));
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
   color: var(--text-dark);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 a,
@@ -74,7 +83,6 @@ img {
 :focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
-  font-family: system-ui, -apple-system, sans-serif;
 }
 
 @keyframes gradientBG {

@@ -223,6 +223,18 @@
   margin-bottom: 1.25rem;
 }
 
+.pageHeadingRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.pageHeadingText {
+  min-width: 0;
+}
+
 @media (min-width: 768px) {
   .pageHeading {
     margin-bottom: 1.75rem;
@@ -413,6 +425,120 @@
   align-items: center;
   gap: 0.2rem;
   font-weight: 600;
+}
+
+/* Clickable event cards: the title's link covers the whole card, and the
+   buttons on the card sit above it so they still work. */
+.cardClickable {
+  position: relative;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.cardClickable:hover {
+  border-color: #cfcfcf;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.06);
+}
+
+.cardLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.cardLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.cardLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.cardClickable .actions,
+.cardClickable .reportBar,
+.cardClickable .pastActions {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Past events ---------- */
+
+.segmented {
+  display: inline-flex;
+  margin-bottom: 1.25rem;
+  padding: 4px;
+  border-radius: 10px;
+  background: #ececec;
+}
+
+.segmented button,
+.segmented a {
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.segmented a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.segmented button[aria-selected="true"],
+.segmented a[aria-selected="true"] {
+  background: #fff;
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.pastActions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+
+.pastActions > * {
+  width: 100%;
+  min-width: 0;
+  padding: 0 0.6rem;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.pastDownload {
+  grid-column: 1 / -1;
+}
+
+.btnDangerOutline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding: 0 1.1rem;
+  border: 1px solid #f0c4c4;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--danger);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnDangerOutline:hover {
+  border-color: var(--danger);
+  background: #fdf3f3;
 }
 
 /* ---------- Analytics ---------- */
@@ -713,13 +839,27 @@
   background: var(--danger);
 }
 
-.resolvedPill {
+.keptPill,
+.deletedPill {
   flex: none;
   padding: 0.2rem 0.6rem;
-  border: 1px solid #e3e3e3;
   border-radius: 999px;
-  color: var(--ink-faint);
   font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* Kept: the photo stays in the gallery. */
+.keptPill {
+  border: 1px solid #c7e9d3;
+  background: #e7f6ec;
+  color: #1a7f45;
+}
+
+/* Deleted: the photo was removed from the gallery. */
+.deletedPill {
+  border: 1px solid #f3c7c3;
+  background: #fff5f4;
+  color: #b42318;
 }
 
 /* ---------- Report details ---------- */
@@ -769,10 +909,9 @@
   text-align: right;
 }
 
-.needsReview {
-  color: var(--danger);
-  font-weight: 600;
-}
+
+
+
 
 .detailActions {
   display: grid;
@@ -1100,17 +1239,30 @@
 
 .toast {
   position: fixed;
+  top: 50%;
   left: 50%;
-  bottom: calc(1.25rem + env(safe-area-inset-bottom));
   z-index: 60;
-  padding: 0.7rem 1.1rem;
-  border-radius: 999px;
-  background: var(--ink);
+  max-width: calc(100vw - 48px);
+  padding: 14px 22px;
+  border-radius: 14px;
+  background: rgb(17 17 17 / 0.92);
   color: #fff;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transform: translateX(-50%);
-  animation: rise 0.2s ease-out;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.25);
+  box-sizing: border-box;
+  pointer-events: none;
+  animation: toastIn 0.18s ease-out;
+}
+
+/* Messages pop up in the middle of the screen. */
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.94);
+  }
 }
 
 .visuallyHidden {
@@ -1139,4 +1291,74 @@
     opacity: 0;
     transform: translate(-50%, 6px);
   }
+}
+
+/* ---------- Sidebar frame (shared look with the admin dashboard) ---------- */
+
+.shellOrganizer {
+  background: var(--surface, #f7f7f7);
+}
+
+.shellOrganizer > main {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .shellOrganizer > main {
+    padding-top: 2.25rem;
+  }
+}
+
+.menuWithBadge {
+  position: relative;
+}
+
+.menuWithBadge .badge {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.2rem;
+}
+
+/* Report status on the details page: a small tag with an icon. */
+.statusTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.statusOpen {
+  background: #fff4e5;
+  color: #9a5b00;
+}
+
+.statusKept {
+  background: #e7f6ec;
+  color: #1a7f45;
+}
+
+.statusDeleted {
+  background: #fdecea;
+  color: #b42318;
+}
+
+
+/* Number beside a page title, e.g. "Events 2". */
+.titleCount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  margin-left: 0.55rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: #ececec;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  vertical-align: 0.2em;
+  box-sizing: border-box;
 }

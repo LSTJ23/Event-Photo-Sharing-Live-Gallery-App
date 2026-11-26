@@ -34,8 +34,10 @@ export default function ReportsPage() {
                       {event?.name ?? "Unknown event"} · {report.time}
                     </span>
                   </span>
-                  {report.state === "resolved" ? (
-                    <span className={styles.resolvedPill}>Resolved</span>
+                  {report.state === "kept" ? (
+                    <span className={styles.keptPill}>Kept</span>
+                  ) : report.state === "deleted" ? (
+                    <span className={styles.deletedPill}>Deleted</span>
                   ) : report.unread ? (
                     <span className={styles.unreadDot} aria-label="Unread" />
                   ) : null}

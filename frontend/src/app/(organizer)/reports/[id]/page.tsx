@@ -1,7 +1,9 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { CheckIcon, FlagIcon, TrashIcon } from "@/components/icons";
 import { PageHeading } from "@/components/organizer/PageHeading";
 import { useOrganizerStore } from "@/components/organizer/OrganizerStore";
 import { RemovePhotosModal } from "@/components/RemovePhotosModal";
@@ -10,9 +12,9 @@ import styles from "@/components/organizer.module.css";
 /** One report: the photo, why and by whom it was reported, and Delete photo / Keep photo. */
 export default function ReportPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const { getReport, getEvent, deletePhoto, keepReport } = useOrganizerStore();
   const [confirming, setConfirming] = useState(false);
+  const [confirmingKeep, setConfirmingKeep] = useState(false);
   const report = getReport(id);
 
   if (!report) {
@@ -26,6 +28,8 @@ export default function ReportPage() {
 
   const event = getEvent(report.eventId);
   const photo = event?.photos.find((p) => p.id === report.photoId);
+  // After Keep or Delete you stay here and see the new status; "‹ Reported photos" goes back.
+  const shade = photo?.shade ?? null;
   const open = report.state === "open";
 
   return (
@@ -34,11 +38,11 @@ export default function ReportPage() {
       <div className={styles.detail}>
         <div
           className={styles.detailPhoto}
-          style={{ background: photo ? photo.shade : "var(--surface-muted)" }}
+          style={{ background: shade ?? "var(--surface-muted)" }}
           role="img"
-          aria-label={photo ? "The reported photo" : "Photo removed"}
+          aria-label={shade ? "The reported photo" : "Photo removed"}
         >
-          {!photo && "Photo removed"}
+          {!shade && "Photo removed"}
         </div>
 
         <div>
@@ -61,7 +65,21 @@ export default function ReportPage() {
             </div>
             <div className={styles.infoRow}>
               <dt>Status</dt>
-              <dd className={open ? styles.needsReview : undefined}>{open ? "Needs review" : "Resolved"}</dd>
+              <dd>
+                {open ? (
+                  <span className={`${styles.statusTag} ${styles.statusOpen}`}>
+                    <FlagIcon size={13} /> Needs review
+                  </span>
+                ) : report.state === "kept" ? (
+                  <span className={`${styles.statusTag} ${styles.statusKept}`}>
+                    <CheckIcon size={13} /> Kept
+                  </span>
+                ) : (
+                  <span className={`${styles.statusTag} ${styles.statusDeleted}`}>
+                    <TrashIcon size={13} /> Deleted
+                  </span>
+                )}
+              </dd>
             </div>
           </dl>
 
@@ -73,10 +91,7 @@ export default function ReportPage() {
               <button
                 type="button"
                 className={styles.btn}
-                onClick={() => {
-                  keepReport(report.id);
-                  router.push("/reports");
-                }}
+                onClick={() => setConfirmingKeep(true)}
               >
                 Keep photo
               </button>
@@ -85,6 +100,19 @@ export default function ReportPage() {
         </div>
       </div>
 
+      {confirmingKeep && (
+        <ConfirmDialog
+          title="Keep this photo?"
+          text="It stays in the gallery for everyone, and the report is closed."
+          confirmLabel="Keep photo"
+          icon={<CheckIcon size={20} />}
+          onClose={() => setConfirmingKeep(false)}
+          onConfirm={() => {
+            setConfirmingKeep(false);
+            keepReport(report.id);
+          }}
+        />
+      )}
       {confirming && (
         <RemovePhotosModal
           count={1}
@@ -92,9 +120,8 @@ export default function ReportPage() {
           failed={false}
           onClose={() => setConfirming(false)}
           onConfirm={() => {
-            deletePhoto(report.eventId, report.photoId);
             setConfirming(false);
-            router.push("/reports");
+            deletePhoto(report.eventId, report.photoId);
           }}
         />
       )}

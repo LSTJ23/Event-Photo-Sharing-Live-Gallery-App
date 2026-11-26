@@ -29,6 +29,10 @@ interface AdminStore {
   createOrganizer: (form: UserForm) => void;
   updateOrganizer: (id: string, form: UserForm) => void;
   resendInvite: (id: string) => void;
+  /** Past events: tuck away, bring back, or delete for good. */
+  archiveEvent: (id: string) => void;
+  restoreEvent: (id: string) => void;
+  deleteEvent: (id: string) => void;
 }
 
 const Context = createContext<AdminStore | null>(null);
@@ -61,7 +65,7 @@ const fromForm = (form: EventForm) => ({
 export function AdminStoreProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState(initialAdminEvents);
   const [organizers, setOrganizers] = useState(initialOrganizers);
-  const [reports] = useState(initialAdminReports);
+  const [reports, setReports] = useState(initialAdminReports);
   const [toast, setToast] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -85,7 +89,7 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
       createEvent: (form) => {
         let id = slug(form.name);
         while (events.some((e) => e.id === id)) id = `${slug(form.name)}-${Math.floor(Math.random() * 1000)}`;
-        setEvents((all) => [...all, { id, ...fromForm(form), status: "UPCOMING", photoCount: 0, covers: [] }]);
+        setEvents((all) => [...all, { id, ...fromForm(form), status: "UPCOMING", participants: 0, photoCount: 0, covers: [] }]);
         const org = getOrganizer(form.organizerId);
         notify(org ? `Event created. ${org.person} has been invited.` : "Event created");
       },
@@ -116,6 +120,19 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
       resendInvite: (id) => {
         const o = getOrganizer(id);
         if (o) notify(`Invite sent again to ${o.email}`);
+      },
+      archiveEvent: (id) => {
+        setEvents((all) => all.map((e) => (e.id === id ? { ...e, archived: true } : e)));
+        notify("Event archived");
+      },
+      restoreEvent: (id) => {
+        setEvents((all) => all.map((e) => (e.id === id ? { ...e, archived: false } : e)));
+        notify("Event restored to Past events");
+      },
+      deleteEvent: (id) => {
+        setEvents((all) => all.filter((e) => e.id !== id));
+        setReports((all) => all.filter((r) => r.eventId !== id));
+        notify("Event deleted");
       }
     };
   }, [events, organizers, reports, toast, notify]);
