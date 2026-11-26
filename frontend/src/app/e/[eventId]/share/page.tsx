@@ -8,16 +8,15 @@ import { useEventSession } from "@/components/EventSession";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import styles from "@/components/flow.module.css";
 import { uploadPhoto } from "@/lib/api";
-import { getCurrentUser } from "@/lib/currentUser";
 
 type ShareState = "ready" | "sharing" | "shared" | "failed";
 
 export default function SharePage() {
   const router = useRouter();
-  const { event, draft, clearDraft } = useEventSession();
+  const { event, user, draft, clearDraft } = useEventSession();
   const [state, setState] = useState<ShareState>("ready");
   const [anonymous, setAnonymous] = useState(false);
-  const userName = getCurrentUser().name;
+  const userName = user.name;
   const cameraHref = `/e/${event.id}/camera`;
 
   useEffect(() => {
@@ -28,7 +27,7 @@ export default function SharePage() {
     if (!draft) return;
     setState("sharing");
     try {
-      await uploadPhoto(event.id, draft.blob, { anonymous });
+      await uploadPhoto(event.id, draft.blob, { anonymous }, userName);
       clearDraft();
       setState("shared");
     } catch {

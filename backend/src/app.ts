@@ -1,15 +1,23 @@
 import express from "express";
+import { createAuthHandlers, type AuthService } from "./controllers/authController.js";
 import { checkSupabaseDatabase } from "./supabase.js";
 
 export interface Database {
   query(sql: string): Promise<unknown>;
 }
 
+export interface AppServices {
+  auth?: AuthService;
+}
+
 export function createApp(
   database: Database,
-  checkSupabase: () => Promise<void> = checkSupabaseDatabase
+  checkSupabase: () => Promise<void> = checkSupabaseDatabase,
+  services: AppServices = {}
 ) {
   const app = express();
+
+  app.use(express.json());
 
   app.get("/health", (_request, response) => {
     response.status(200).json({ status: "ok" });
@@ -29,6 +37,16 @@ export function createApp(
       response.status(503).json({ status: "error", database: "unavailable" });
     }
   });
+
+  if (services.auth) {
+    const auth = createAuthHandlers(services.auth);
+    app.post("/api/auth/code", auth.requestCode);
+    app.post("/api/auth/verify", auth.verifyCode);
+    app.post("/api/auth/login", auth.login);
+    app.get("/api/auth/me", auth.me);
+    app.post("/api/auth/password", auth.changePassword);
+    app.get("/api/auth/events/:eventId", auth.event);
+  }
 
   return app;
 }

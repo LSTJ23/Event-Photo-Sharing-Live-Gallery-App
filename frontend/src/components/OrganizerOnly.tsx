@@ -1,17 +1,23 @@
 "use client";
 
-import { getCurrentUser, type Role } from "@/lib/currentUser";
+import Link from "next/link";
+import type { Role } from "@/lib/auth";
+import { useCurrentUser } from "./useCurrentUser";
 import styles from "./admin.module.css";
 
 function RoleGate({ allow, title, children }: { allow: Role[]; title: string; children: React.ReactNode }) {
-  if (!allow.includes(getCurrentUser().role)) {
+  const state = useCurrentUser();
+  if (state.status === "loading") return <main className={styles.page}><p>Checking your session...</p></main>;
+  if (state.status === "error") return <main className={styles.page}><p role="alert">Unable to check your session. Please try again.</p></main>;
+  if (state.status !== "ready" || state.user.mustChangePassword || !allow.includes(state.user.role)) {
     return (
       <main className={styles.page}>
         <div className={styles.statusMessage}>
           <h1>{title}</h1>
           <p className={styles.muted}>
-            To share photos, open the event link from the organizer or scan the event&apos;s QR code.
+            Sign in with an authorized account to continue.
           </p>
+          <Link href="/portal">Go to login</Link>
         </div>
       </main>
     );
