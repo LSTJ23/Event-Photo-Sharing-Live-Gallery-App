@@ -14,7 +14,7 @@ export function OrganizerShell({ children }: { children: React.ReactNode }) {
       links={[
         { href: "/events", label: "Events" },
         { href: "/reports", label: "Reported photos", badge: unreadCount },
-        { href: "/login", label: "Log out" }
+        { href: "/portal", label: "Log out" }
       ]}
     >
       {children}

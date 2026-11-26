@@ -11,25 +11,29 @@ This guide walks you through deploying the Express API backend to Render.
 
 ## Step 1: Push Configuration to GitHub
 
-The `render.yaml` file has been created in the repository root. Commit and push it:
+Commit and push the deployment changes to the branch connected to Render.
+Render builds from the repository, not from local uncommitted changes.
 
-```bash
-git add render.yaml
-git commit -m "Add Render deployment configuration"
-git push origin main
-```
+## Step 2: Configure the Web Service on Render
 
-## Step 2: Create a Web Service on Render
+The `render.yaml` file is a Blueprint configuration. For a Blueprint-managed
+service, sync the Blueprint after pushing the changes. For an existing service
+that is not managed by a Blueprint, changing the file alone will not update its
+settings; configure the service in the Render dashboard instead:
 
-1. Go to [Render Dashboard](https://dashboard.render.com)
-2. Click **New +** → **Web Service**
-3. Select your GitHub repository (`Event-Photo-Sharing-Live-Gallery-App`)
-4. Configure:
+1. Go to the service in the [Render Dashboard](https://dashboard.render.com),
+   or create a new **Web Service** connected to this repository.
+2. Set the root directory to the repository root (leave it blank).
+3. Configure:
    - **Name**: `event-photo-gallery-api` (or your preferred name)
    - **Environment**: `Node`
-   - **Build Command**: `npm ci --omit=dev && npm run build --workspace=backend`
-   - **Start Command**: `node backend/dist/server.js`
+   - **Build Command**: `bash build.sh`
+   - **Start Command**: `cd backend && npm start`
    - **Plan**: Free (or Starter for production)
+
+The build script installs development dependencies explicitly because TypeScript
+and its type definitions are required to compile even when `NODE_ENV` is
+`production`.
 
 ## Step 3: Set Environment Variables
 
@@ -42,6 +46,9 @@ In the Render web UI, go to your service → **Environment** and add:
 | `DATABASE_URL` | Your Supabase connection string | From Supabase dashboard → Connect → Session pooler |
 | `SUPABASE_URL` | Your Supabase project URL | From Supabase dashboard → Settings |
 | `SUPABASE_SECRET_KEY` | Your Supabase secret key | From Supabase dashboard → Settings → API Keys → Secret key (starts with `sb_secret_`) |
+
+Render uses Node 24 from the root `.nvmrc` unless a higher-priority
+`NODE_VERSION` environment variable overrides it.
 
 ### Where to Find These Credentials
 
@@ -91,8 +98,7 @@ Expected responses:
 
 ### Free Tier Limitations
 - Services spin down after 15 minutes of inactivity
-- Limited to one free web service per account
-- No custom domains (you'll get `*.onrender.com`)
+- See [Render's free tier documentation](https://render.com/docs/free) for current limits
 
 ### Production Deployment
 For production, consider upgrading to a Starter plan:
@@ -123,11 +129,11 @@ Both are optional but recommended for full health check coverage.
 
 ### "Build failed" errors
 - Check the build logs in Render dashboard
-- Ensure Node.js version requirement is met (24+)
-- Verify `npm ci --omit=dev` succeeds locally
+- Check that the root directory, build command, and Node version match Step 2
+- Verify `npm ci --include=dev` and `npm run build --workspace=backend` succeed locally
 
 ### "Cannot find module" errors
-- Run `npm ci --omit=dev && npm run build --workspace=backend` locally
+- Run `npm ci --include=dev && npm run build --workspace=backend` locally
 - Ensure TypeScript compilation works (`npm run build --workspace=backend`)
 
 ### Health checks returning errors
@@ -141,11 +147,22 @@ Both are optional but recommended for full health check coverage.
 
 ## Next Steps
 
-After successful backend deployment:
-1. Update your frontend's API base URL to point to your Render API URL
-2. Test API endpoints from the frontend
-3. Set up monitoring and error tracking
-4. Consider database backups for production
+The Render service deploys only the backend health checks. To configure its URL
+in Vercel without breaking the mock photo screens:
+
+1. Push the frontend changes that support `NEXT_PUBLIC_USE_MOCK_API`.
+2. In your Vercel project settings, add `NEXT_PUBLIC_API_URL` with the Render
+   service's HTTPS URL (without `/health`) and `NEXT_PUBLIC_USE_MOCK_API` with
+   the value `true` for the relevant deployment environments.
+3. Redeploy Vercel with the new commit and variables. The URL is configured,
+   but photo requests remain in the browser mock; they do not reach Render.
+
+When the backend implements the event and photo routes listed in
+`frontend/src/lib/api.ts`, supports the required authentication and
+authorization, and allows the Vercel origin through CORS, set
+`NEXT_PUBLIC_USE_MOCK_API` to `false` or remove it and redeploy Vercel.
+Test the real API before switching production. Other mock screens may need
+separate integration; see the [README](./README.md) for current app status.
 
 ## Additional Resources
 

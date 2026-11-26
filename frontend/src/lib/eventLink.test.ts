@@ -22,4 +22,8 @@ describe("parseEventLink", () => {
   it("ignores links that aren't to an event", () => {
     expect(parseEventLink("https://example.com/menu")).toBeNull();
   });
+
+  it("ignores malformed encoded event ids", () => {
+    expect(parseEventLink("https://example.com/e/%E0%A4%A")).toBeNull();
+  });
 });

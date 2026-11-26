@@ -91,7 +91,7 @@ function UserFoot() {
         <br />
         <span className={styles.muted}>Admin</span>
       </span>
-      <Link href="/login" className={styles.textButton}>
+      <Link href="/portal" className={styles.textButton}>
         Log out
       </Link>
     </div>

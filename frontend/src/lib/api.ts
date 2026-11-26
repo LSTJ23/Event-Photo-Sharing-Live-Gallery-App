@@ -1,8 +1,8 @@
 // The one place the frontend talks to the backend.
 //
-// While NEXT_PUBLIC_API_URL is unset, every call goes to the in-browser mock in
-// ./mockApi. Once the Express API has these routes, set NEXT_PUBLIC_API_URL
-// (e.g. http://localhost:3001) and the screens use it with no other changes.
+// Calls use the in-browser mock when NEXT_PUBLIC_API_URL is unset or
+// NEXT_PUBLIC_USE_MOCK_API is "true". Once the Express API has these routes,
+// configure its URL and disable mock mode to use it.
 //
 // Routes the frontend expects from the backend:
 //   GET  /events/:eventId          → EventInfo            (404 if no such event)
@@ -19,6 +19,7 @@ import * as mock from "./mockApi";
 import type { EventInfo, Photo } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
+const USE_MOCK_API = !API_URL || process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, init);
@@ -29,7 +30,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export async function getEvent(eventId: string): Promise<EventInfo | null> {
-  if (!API_URL) return mock.getEvent(eventId);
+  if (USE_MOCK_API) return mock.getEvent(eventId);
   try {
     return await request<EventInfo>(`/events/${encodeURIComponent(eventId)}`);
   } catch (error) {
@@ -39,7 +40,7 @@ export async function getEvent(eventId: string): Promise<EventInfo | null> {
 }
 
 export async function listPhotos(eventId: string): Promise<Photo[]> {
-  if (!API_URL) return mock.listPhotos(eventId);
+  if (USE_MOCK_API) return mock.listPhotos(eventId);
   return request<Photo[]>(`/events/${encodeURIComponent(eventId)}/photos`);
 }
 
@@ -49,7 +50,7 @@ export interface UploadOptions {
 }
 
 export async function uploadPhoto(eventId: string, image: Blob, options: UploadOptions): Promise<Photo> {
-  if (!API_URL) return mock.uploadPhoto(eventId, image, options);
+  if (USE_MOCK_API) return mock.uploadPhoto(eventId, image, options);
   const body = new FormData();
   body.append("photo", image, "photo.jpg");
   body.append("anonymous", String(options.anonymous));
@@ -58,7 +59,7 @@ export async function uploadPhoto(eventId: string, image: Blob, options: UploadO
 
 /** Admins only: removes photos from the event gallery for everyone. */
 export async function removePhotos(eventId: string, photoIds: string[]): Promise<void> {
-  if (!API_URL) return mock.removePhotos(eventId, photoIds);
+  if (USE_MOCK_API) return mock.removePhotos(eventId, photoIds);
   await Promise.all(
     photoIds.map(async (photoId) => {
       const response = await fetch(
