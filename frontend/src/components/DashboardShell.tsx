@@ -3,12 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronRightIcon, CloseIcon, MenuIcon } from "./icons";
+import { initials } from "./admin/AdminShell";
+import frame from "./admin/dashboard.module.css";
+import { CloseIcon, MenuIcon } from "./icons";
 import styles from "./organizer.module.css";
+import { getCurrentUser } from "@/lib/currentUser";
 
 export interface DashboardLink {
   href: string;
   label: string;
+  icon?: React.ReactNode;
   /** A red count beside the link, e.g. unread reports. */
   badge?: number;
   /** Highlight only on this exact page (for a dashboard's home link). */
@@ -16,9 +20,9 @@ export interface DashboardLink {
 }
 
 /**
- * The frame shared by the organizer and admin dashboards: a top bar with
- * "Event Gallery" and a role tag, links on desktop, a slide-in menu on phones,
- * and an optional toast message.
+ * The organizer dashboard's frame, laid out like the admin's: a sidebar with
+ * the links on wide screens, a top bar with a slide-in menu on phones and
+ * tablets, the signed-in user and Log out at the bottom, and an optional toast.
  */
 export function DashboardShell({
   role,
@@ -48,66 +52,80 @@ export function DashboardShell({
 
   const isActive = (link: DashboardLink) =>
     link.exact ? pathname === link.href : pathname === link.href || pathname.startsWith(`${link.href}/`);
-  const badge = (link: DashboardLink) =>
-    link.badge ? (
-      <span className={styles.badge} aria-label={`${link.badge} new`}>
-        {link.badge}
+
+  const brand = (
+    <Link href={homeHref} className={frame.brand}>
+      Event Gallery <span className={frame.rolePill}>{role}</span>
+    </Link>
+  );
+
+  const nav = (onNavigate?: () => void) =>
+    links.map((link) => {
+      const active = isActive(link);
+      return (
+        <Link
+          key={link.href}
+          href={link.href}
+          className={`${frame.navLink} ${active ? frame.navActive : ""}`}
+          aria-current={active ? "page" : undefined}
+          onClick={onNavigate}
+        >
+          {link.icon}
+          <span style={{ flex: 1 }}>{link.label}</span>
+          {link.badge ? (
+            <span className={styles.badge} aria-label={`${link.badge} new`}>
+              {link.badge}
+            </span>
+          ) : null}
+        </Link>
+      );
+    });
+
+  const user = getCurrentUser();
+  const foot = (
+    <div className={frame.sideFoot}>
+      <span className={frame.avatar} aria-hidden="true">
+        {initials(user.name)}
       </span>
-    ) : null;
+      <span>
+        {user.name}
+        <br />
+        <span className={frame.muted}>{role}</span>
+      </span>
+      <Link href="/login" className={frame.textButton}>
+        Log out
+      </Link>
+    </div>
+  );
 
   return (
-    <div className={styles.page}>
-      <header className={styles.topBar}>
-        <div className={`${styles.container} ${styles.topBarInner}`}>
-          <Link href={homeHref} className={styles.brand}>
-            Event Gallery <span className={styles.rolePill}>{role}</span>
-          </Link>
+    <div className={`${frame.shell} ${styles.shellOrganizer}`}>
+      <nav className={frame.sidebar} aria-label={role}>
+        {brand}
+        {nav()}
+        {foot}
+      </nav>
 
-          <nav className={styles.nav} aria-label="Main">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`${styles.navLink} ${isActive(link) ? styles.navActive : ""}`}
-                aria-current={isActive(link) ? "page" : undefined}
-              >
-                {link.label}
-                {badge(link)}
-              </Link>
-            ))}
-          </nav>
-
-          <button
-            type="button"
-            className={styles.menuButton}
-            onClick={() => setMenuOpen(true)}
-            aria-label="Open menu"
-            aria-expanded={menuOpen}
-          >
-            <MenuIcon />
-            {totalBadge > 0 && <span className={styles.badge}>{totalBadge}</span>}
-          </button>
-        </div>
+      <header className={frame.topBar}>
+        <button type="button" className={`${frame.menuButton} ${styles.menuWithBadge}`} onClick={() => setMenuOpen(true)} aria-label="Open menu" aria-expanded={menuOpen}>
+          <MenuIcon />
+          {totalBadge > 0 && <span className={styles.badge}>{totalBadge}</span>}
+        </button>
+        {brand}
       </header>
 
       {menuOpen && (
         <>
-          <div className={styles.drawerBackdrop} onClick={() => setMenuOpen(false)} />
-          <nav className={styles.drawer} aria-label="Main">
-            <div className={styles.drawerHeader}>
-              <span className={styles.rolePill}>{role}</span>
-              <button type="button" className={styles.menuButton} onClick={() => setMenuOpen(false)} aria-label="Close menu">
+          <div className={frame.backdrop} onClick={() => setMenuOpen(false)} />
+          <nav className={frame.drawer} aria-label={`${role} menu`}>
+            <div className={frame.drawerHead}>
+              {brand}
+              <button type="button" className={frame.menuButton} onClick={() => setMenuOpen(false)} aria-label="Close menu">
                 <CloseIcon />
               </button>
             </div>
-            {links.map((link) => (
-              <Link key={link.href} href={link.href} className={styles.drawerLink} onClick={() => setMenuOpen(false)}>
-                <span>
-                  {link.label} {badge(link)}
-                </span>
-                <ChevronRightIcon />
-              </Link>
-            ))}
+            {nav(() => setMenuOpen(false))}
+            {foot}
           </nav>
         </>
       )}

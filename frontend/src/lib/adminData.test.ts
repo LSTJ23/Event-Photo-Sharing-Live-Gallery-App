@@ -7,6 +7,8 @@ import {
   initialAdminEvents,
   initialOrganizers,
   matches,
+  topEvents,
+  eventTab,
   needsAttention,
   topOrganizers,
   userFormErrors,
@@ -109,5 +111,21 @@ describe("needsAttention", () => {
     const events = initialAdminEvents.map((e) => ({ ...e, time: e.time || "18:00", endTime: e.endTime || "21:00" }));
     const orgs = initialOrganizers.map((o) => ({ ...o, status: "active" as const }));
     expect(needsAttention(events, orgs, [])).toEqual([]);
+  });
+});
+
+describe("eventTab", () => {
+  it("puts live and upcoming events on Current, ended ones on Past, archived ones on Archived", () => {
+    const [live, upcoming, ended] = initialAdminEvents;
+    expect([eventTab(live), eventTab(upcoming), eventTab(ended)]).toEqual(["current", "current", "past"]);
+    expect(eventTab({ ...ended, archived: true })).toBe("archived");
+  });
+});
+
+describe("topEvents", () => {
+  it("ranks by participants or photos and leaves out events with none", () => {
+    expect(topEvents(initialAdminEvents, "participants").map((e) => e.id)).toEqual(["freshmen-welcome-night", "dlsu-cso-event"]);
+    expect(topEvents(initialAdminEvents, "photoCount").map((e) => e.photoCount)).toEqual([126, 48]);
+    expect(topEvents(initialAdminEvents, "photoCount", 1).length).toBe(1);
   });
 });

@@ -130,27 +130,39 @@ Routes in `frontend/src/app`:
 | `/e/<eventId>/preview` | 02 Photo preview |
 | `/e/<eventId>/share` | 03 Share photo (with name or anonymously), then 03b "Photo shared!" |
 | `/e/<eventId>/gallery` | 04 Event gallery (All Photos / Live Gallery; `?view=live` opens Live Gallery) |
-| `/e/<eventId>/photos/<photoId>` | 05 Single photo |
+| `/e/<eventId>/photos/<photoId>` | 05 Single photo, with Report: pick a reason from a dropdown (Other asks for a few words); the organizer reviews it |
 
-Organizer dashboard (phone and desktop), in `frontend/src/app/(organizer)`:
+Display gallery (present mode for a projector or TV), in `frontend/src/app/display`:
 
 | Route | Screen |
 | --- | --- |
-| `/events` | The organizer's events: Gallery, Analytics, QR code, and reported photos to review |
+| `/display/<eventId>` | Presenter view, like PowerPoint's: the current photo as the audience sees it, up next, a timer, `5 / 24`, play/pause, previous/next, slideshow or grid, photo speed, show or hide the QR code, and every photo to jump to. Keys: arrows or a clicker (PageUp/PageDown), Space, G, Q. Opened from the organizer's and the admin's gallery |
+| `/display/<eventId>/screen` | Audience screen for the projector or TV: just the photos and the QR code. "Open audience screen" opens it in its own window (drag it to the projector, press F); it follows the presenter view through a `BroadcastChannel` in the same browser. Opened on its own, it plays the slideshow by itself |
+
+Organizer dashboard (phone and desktop), in `frontend/src/app/(organizer)`:
+
+The organizer pages have a sidebar like the admin's (a menu on phones and tablets).
+
+| Route | Screen |
+| --- | --- |
+| `/events` | The organizer's live and upcoming events: Gallery, Analytics, QR code, and reported photos to review |
+| `/past-events` | Events that have ended: Download all photos (zip), Archive / Restore, Delete. Archived events have their own tab |
 | `/events/<eventId>/analytics` | Photos, participants, photos per hour, and the photo limit |
 | `/events/<eventId>/qr` | The event's QR code and share link (copy or download) |
-| `/events/<eventId>/gallery` | 06 The event's gallery (All Photos / Live Gallery), with 07–08 the share-link dialog and QR code |
+| `/events/<eventId>/gallery` | 06 The event's gallery: all photos, with Display gallery, Manage photos and the share link (07–08) |
 | `/events/<eventId>/gallery/manage` | 09 Manage gallery: details, share link and QR code, remove photos (09b confirmation) |
 | `/reports` and `/reports/<id>` | Reported photos, and one report with Delete photo / Keep photo |
 | `/login` | Placeholder "Logged out" page until the login page exists |
 
 Admin dashboard (phone and desktop), in `frontend/src/app/admin`, with a sidebar (a menu on phones). Admins create events and choose the event organizer for each one (the organizer gets an email invite), and create and edit organizer accounts. They can see reported photos, but only the event's organizer can keep or remove them.
 
+Admin pages opened from another page carry `?from=<that page>`, so Back, Cancel and Save return there (from the dashboard, back to the dashboard). Opened from the sidebar, they return to their usual list.
+
 | Route | Screen |
 | --- | --- |
 | `/admin` | Home: Needs your attention (reported photos waiting for an organizer, galleries nearly full, events with no start time, unaccepted invites), Create Event, Manage Events, Create User, Manage Users, and the Report Logs overview |
-| `/admin/events` | Manage Events: Current and Past events tabs, search, and Edit / Gallery / QR on each event |
-| `/admin/events/<id>/gallery` | The event's photos and share link, inside the admin (view-only) |
+| `/admin/events` | Manage Events: Current, Past events and Archived tabs, search. Current: Edit / Gallery / QR. Past and archived: Gallery, Download all photos, Archive / Restore, Delete |
+| `/admin/events/<id>/gallery` | The event's photos, inside the admin: Display gallery, QR code, share link, and select photos to delete |
 | `/admin/events/<id>/qr` | The event's QR code: copy the link or download the code |
 | `/admin/events/create` | Create Event: name, venue, organizer, photo capacity, and when it starts and ends (date and time each; hashtag optional) |
 | `/admin/events/<id>/edit` | Edit Event |
@@ -158,7 +170,7 @@ Admin dashboard (phone and desktop), in `frontend/src/app/admin`, with a sidebar
 | `/admin/users/create` | Create User: organizer name, person name, email |
 | `/admin/users/<id>/edit` | Edit User |
 | `/admin/reports` | Report Logs: totals and reported photos (view-only). Click a photo for details in a popup |
-| `/admin/analytics` | Analytics: photos shared, Top Organizers (click one for details) and photos per event |
+| `/admin/analytics` | Analytics: totals (events, participants, pictures), top events by participants and by pictures, and a per-event table of participants and pictures uploaded, sorted by date, most participants or most pictures |
 
 Until the API exists, the admin pages use sample data from `frontend/src/lib/adminData.ts`, kept in memory by `frontend/src/components/admin/AdminStore.tsx` (each action there is marked for the backend).
 

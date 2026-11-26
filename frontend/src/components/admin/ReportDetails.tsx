@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from "../icons";
 import { Modal } from "../Modal";
 import { useAdminStore } from "./AdminStore";
+import { useHere, withFrom } from "./useBackTo";
 import styles from "./dashboard.module.css";
 import { formatWhen, type AdminReport } from "@/lib/adminData";
 
@@ -18,6 +19,7 @@ const statusText = (r: AdminReport, orgName: string) =>
  */
 export function ReportDetails({ reports, onClose }: { reports: AdminReport[]; onClose: () => void }) {
   const { getEvent, getOrganizer } = useAdminStore();
+  const here = useHere();
   const [index, setIndex] = useState(0);
   const report = reports[Math.min(index, reports.length - 1)];
   const event = getEvent(report.eventId);
@@ -101,7 +103,7 @@ export function ReportDetails({ reports, onClose }: { reports: AdminReport[]; on
       </p>
       <div className={styles.detailActions}>
         {event && (
-          <Link href={`/admin/events/${event.id}/gallery`} className={styles.btn}>
+          <Link href={withFrom(`/admin/events/${event.id}/gallery`, here)} className={styles.btn}>
             Open gallery
           </Link>
         )}

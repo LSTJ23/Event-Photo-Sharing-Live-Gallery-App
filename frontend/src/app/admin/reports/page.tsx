@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronRightIcon } from "@/components/icons";
 import { PageHeader } from "@/components/admin/AdminShell";
 import { ReportDetails } from "@/components/admin/ReportDetails";
+import { useFrom } from "@/components/admin/useBackTo";
 import { useAdminStore } from "@/components/admin/AdminStore";
 import styles from "@/components/admin/dashboard.module.css";
 import { getStats, type AdminReport } from "@/lib/adminData";
@@ -15,12 +16,13 @@ import { getStats, type AdminReport } from "@/lib/adminData";
  */
 export default function ReportLogsPage() {
   const { events, organizers, reports, getEvent, getOrganizer } = useAdminStore();
+  const from = useFrom();
   const [openReport, setOpenReport] = useState<AdminReport | null>(null);
   const stats = getStats(events, organizers);
 
   return (
     <>
-      <PageHeader title="Report Logs" />
+      <PageHeader title="Report Logs" back={from} />
 
       <div className={styles.stats}>
         <div className={styles.stat}>

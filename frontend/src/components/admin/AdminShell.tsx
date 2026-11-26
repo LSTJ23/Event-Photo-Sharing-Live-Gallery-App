@@ -126,10 +126,10 @@ function Frame({ children }: { children: React.ReactNode }) {
       </nav>
 
       <header className={styles.topBar}>
-        {brand}
         <button type="button" className={styles.menuButton} onClick={() => setMenuOpen(true)} aria-label="Open menu" aria-expanded={menuOpen}>
           <MenuIcon />
         </button>
+        {brand}
       </header>
 
       {menuOpen && (

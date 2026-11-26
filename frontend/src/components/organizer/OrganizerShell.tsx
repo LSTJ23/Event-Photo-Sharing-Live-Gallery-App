@@ -1,9 +1,10 @@
 "use client";
 
 import { DashboardShell } from "../DashboardShell";
+import { ArchiveIcon, CalendarIcon, FlagIcon } from "../icons";
 import { useOrganizerStore } from "./OrganizerStore";
 
-/** The organizer dashboard's frame: Events, Reported photos (with unread count) and Log out. */
+/** The organizer dashboard's frame: sidebar with Events, Past events and Reported photos (with unread count). */
 export function OrganizerShell({ children }: { children: React.ReactNode }) {
   const { unreadCount, toast } = useOrganizerStore();
   return (
@@ -12,9 +13,9 @@ export function OrganizerShell({ children }: { children: React.ReactNode }) {
       homeHref="/events"
       toast={toast}
       links={[
-        { href: "/events", label: "Events" },
-        { href: "/reports", label: "Reported photos", badge: unreadCount },
-        { href: "/login", label: "Log out" }
+        { href: "/events", label: "Events", icon: <CalendarIcon size={20} /> },
+        { href: "/past-events", label: "Past events", icon: <ArchiveIcon size={20} /> },
+        { href: "/reports", label: "Reported photos", icon: <FlagIcon size={20} />, badge: unreadCount }
       ]}
     >
       {children}

@@ -227,3 +227,95 @@ export function UsersIcon({ size = 22 }: { size?: number }) {
     </svg>
   );
 }
+
+/** Box with a lid: archive an event. */
+export function ArchiveIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <rect x="3" y="4" width="18" height="4.5" rx="1" />
+      <path d="M5 8.5V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8.5" />
+      <path d="M10 12.5h4" />
+    </svg>
+  );
+}
+
+/** Arrow curving back: restore an archived event. */
+export function RestoreIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <path d="M4 12a8 8 0 1 0 2.4-5.7" />
+      <path d="M4 4v4.5h4.5" />
+    </svg>
+  );
+}
+
+/** Screen with a play triangle: show the gallery on a big screen. */
+export function PresentIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <rect x="2.5" y="4" width="19" height="13" rx="1.5" />
+      <path d="M10 8.2v4.6l4-2.3z" fill="currentColor" stroke="none" />
+      <path d="M8 21h8M12 17v4" />
+    </svg>
+  );
+}
+
+/** Single big frame: slideshow view. */
+export function SlideshowIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <rect x="5" y="4" width="14" height="16" rx="1.5" />
+      <path d="M2 7v10M22 7v10" />
+    </svg>
+  );
+}
+
+/** Nine small tiles: grid view. */
+export function GridViewIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1" />
+    </svg>
+  );
+}
+
+/** Four corners: full screen. */
+export function FullscreenIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+    </svg>
+  );
+}
+
+/** Play triangle. */
+export function PlayIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <path d="M7 4.5v15l12.5-7.5z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Two bars: pause. */
+export function PauseIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor" stroke="none" />
+      <rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Window with an arrow out: open in a new window. */
+export function ExternalWindowIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <path d="M14 4h6v6M20 4l-8 8" />
+      <path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+    </svg>
+  );
+}

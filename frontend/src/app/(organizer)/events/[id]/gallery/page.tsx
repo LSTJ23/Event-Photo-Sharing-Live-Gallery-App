@@ -4,8 +4,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useEventSession } from "@/components/EventSession";
-import { CalendarIcon, ChevronLeftIcon, LinkIcon, SettingsIcon } from "@/components/icons";
-import { LiveSlideshow } from "@/components/LiveSlideshow";
+import { CalendarIcon, ChevronLeftIcon, LinkIcon, PresentIcon, SettingsIcon } from "@/components/icons";
+import { PhotoViewer } from "@/components/PhotoViewer";
 import { ShareLinkModal } from "@/components/ShareLinkModal";
 import { useOrigin } from "@/components/useOrigin";
 import { usePhotos } from "@/components/usePhotos";
@@ -13,20 +13,24 @@ import styles from "@/components/admin.module.css";
 import { formatEventDate } from "@/lib/format";
 import { shareLinkFor } from "@/lib/shareLink";
 
-type Tab = "all" | "live";
-
 /**
- * 06 Event gallery for the organizer (phone and desktop), with 07/08 the
- * share-link dialog. Sits inside the organizer dashboard's frame.
+ * 06 Event gallery for the organizer (phone and desktop): all photos, with
+ * Display gallery (present mode for a big screen: slideshow or grid),
+ * Manage photos (select and remove) and the share link. Click a photo to
+ * see it big with its details (PhotoViewer).
  */
 export default function OrganizerGalleryPage() {
   const { event } = useEventSession();
   const photos = usePhotos(event.id);
   const origin = useOrigin();
-  const [tab, setTab] = useState<Tab>("all");
   const [sharing, setSharing] = useState(false);
+  // Which photo is open in the popup (by id, so new photos arriving don't shift it).
+  const [openId, setOpenId] = useState<string | null>(null);
+  const list = photos.status === "ready" ? photos.photos : [];
+  const openIndex = openId ? list.findIndex((p) => p.id === openId) : -1;
   const count = photos.status === "ready" ? photos.photos.length : null;
   const link = shareLinkFor(origin, event.id);
+  const galleryHref = `/events/${event.id}/gallery`;
 
   return (
     <>
@@ -45,45 +49,18 @@ export default function OrganizerGalleryPage() {
             </p>
           </div>
         </div>
-        <div className={styles.headerActions}>
-          <Link
-            href={`/events/${event.id}/gallery/manage`}
-            className={styles.iconButton}
-            aria-label="Manage gallery"
-            title="Manage gallery"
-          >
-            <SettingsIcon />
-          </Link>
-          <button
-            type="button"
-            className={styles.btnDark}
-            onClick={() => setSharing(true)}
-            disabled={!origin}
-            aria-label="Copy Public Share Link"
-          >
-            <LinkIcon /> <span className={styles.btnLabel}>Copy Public Share Link</span>
-          </button>
-        </div>
       </section>
 
-      <div className={styles.tabs} role="tablist" aria-label="Gallery view">
-        {(
-          [
-            ["all", "All Photos"],
-            ["live", "Live Gallery"]
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            className={`${styles.tab} ${tab === id ? styles.tabActive : ""}`}
-            onClick={() => setTab(id)}
-          >
-            {label}
-          </button>
-        ))}
+      <div className={styles.galleryActions}>
+        <Link href={`/display/${event.id}?back=${encodeURIComponent(galleryHref)}`} className={`${styles.btnDark} ${styles.displayButton}`}>
+          <PresentIcon /> Display gallery
+        </Link>
+        <Link href={`/events/${event.id}/gallery/manage`} className={styles.btn}>
+          <SettingsIcon /> Manage photos
+        </Link>
+        <button type="button" className={styles.btn} onClick={() => setSharing(true)} disabled={!origin}>
+          <LinkIcon /> Share link
+        </button>
       </div>
 
       {photos.status === "loading" && <p className={styles.emptyGrid}>Loading photos…</p>}
@@ -94,21 +71,26 @@ export default function OrganizerGalleryPage() {
         <p className={styles.emptyGrid}>No photos yet. Share the event link so participants can start adding them.</p>
       )}
       {photos.status === "ready" && photos.photos.length > 0 && (
-        <div role="tabpanel">
-          {tab === "all" ? (
-            <ul className={styles.grid}>
-              {photos.photos.map((photo) => (
-                <li key={photo.id} className={styles.tile}>
-                  <img src={photo.url} alt={`Photo shared by ${photo.sharedBy}`} loading="lazy" />
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <LiveSlideshow photos={photos.photos} className={styles.liveView} />
-          )}
-        </div>
+        <ul className={styles.grid}>
+          {photos.photos.map((photo) => (
+            <li key={photo.id} className={styles.tile}>
+              <button type="button" className={styles.tileButton} onClick={() => setOpenId(photo.id)} aria-label={`Open photo shared by ${photo.sharedBy}`}>
+                <img src={photo.url} alt="" loading="lazy" />
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
 
+      {openIndex >= 0 && (
+        <PhotoViewer
+          photos={list}
+          index={openIndex}
+          eventName={event.name}
+          onIndex={(i) => setOpenId(list[i]?.id ?? null)}
+          onClose={() => setOpenId(null)}
+        />
+      )}
       {sharing && <ShareLinkModal link={link} eventId={event.id} onClose={() => setSharing(false)} />}
     </>
   );

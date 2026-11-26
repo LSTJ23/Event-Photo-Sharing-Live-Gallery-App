@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { SearchIcon } from "@/components/icons";
 import { initials, PageHeader } from "@/components/admin/AdminShell";
+import { useFrom, useHere, withFrom } from "@/components/admin/useBackTo";
 import { useAdminStore } from "@/components/admin/AdminStore";
 import styles from "@/components/admin/dashboard.module.css";
 import { matches } from "@/lib/adminData";
@@ -11,6 +12,9 @@ import { matches } from "@/lib/adminData";
 /** Every event organizer as a card, with Edit. */
 export default function ManageUsersPage() {
   const { organizers, events } = useAdminStore();
+  const from = useFrom();
+  const here = useHere();
+  const to = (href: string) => (from ? withFrom(href, here) : href);
   const [query, setQuery] = useState("");
   const shown = organizers.filter((o) => matches(query, o.org, o.person, o.email));
 
@@ -18,8 +22,9 @@ export default function ManageUsersPage() {
     <>
       <PageHeader
         title="Manage Users"
+        back={from}
         action={
-          <Link href="/admin/users/create" className={styles.btnDark}>
+          <Link href={withFrom("/admin/users/create", here)} className={styles.btnDark}>
             + Create user
           </Link>
         }
@@ -60,7 +65,7 @@ export default function ManageUsersPage() {
                     )}
                   </span>
                   <div className={styles.itemActions}>
-                    <Link href={`/admin/users/${o.id}/edit`} className={`${styles.btn} ${styles.small}`}>
+                    <Link href={to(`/admin/users/${o.id}/edit`)} className={`${styles.btn} ${styles.small}`}>
                       Edit
                     </Link>
                   </div>

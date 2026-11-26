@@ -29,9 +29,13 @@ export interface AdminEvent {
   /** End time, HH:MM, 24-hour */
   endTime: string;
   status: AdminEventStatus;
+  /** People who joined the event (scanned the QR code or opened the link). */
+  participants: number;
   photoCount: number;
   /** A few placeholder greys for the event card, until real photos exist. */
   covers: string[];
+  /** Archived past events are tucked away under Manage Events → Archived. */
+  archived?: boolean;
 }
 
 export type OrganizerStatus = "active" | "invited";
@@ -87,6 +91,7 @@ export const initialAdminEvents: AdminEvent[] = [
     endDate: "2026-10-14",
     endTime: "23:00",
     status: "LIVE",
+    participants: dlsu.participants,
     photoCount: dlsu.photos.length,
     covers: dlsu.photos.slice(0, 4).map((p) => p.shade)
   },
@@ -102,6 +107,7 @@ export const initialAdminEvents: AdminEvent[] = [
     endDate: "2026-12-03",
     endTime: "",
     status: "UPCOMING",
+    participants: 0,
     photoCount: 0,
     covers: []
   },
@@ -117,6 +123,7 @@ export const initialAdminEvents: AdminEvent[] = [
     endDate: "2026-08-23",
     endTime: "01:00",
     status: "ENDED",
+    participants: 31,
     photoCount: 126,
     covers: [shade(3), shade(11), shade(19), shade(27)]
   }
@@ -124,6 +131,11 @@ export const initialAdminEvents: AdminEvent[] = [
 
 /** Past events are the ones that have ended; the rest (live and upcoming) are current. */
 export const isPast = (event: AdminEvent) => event.status === "ENDED";
+
+export type EventTab = "current" | "past" | "archived";
+
+/** Which Manage Events tab an event belongs on. */
+export const eventTab = (event: AdminEvent): EventTab => (!isPast(event) ? "current" : event.archived ? "archived" : "past");
 
 export const initialOrganizers: Organizer[] = [
   { id: "org-1", org: "Org 1", person: "Person 1", email: "person1@org1.example", status: "active" },
@@ -192,6 +204,14 @@ export function getStats(events: AdminEvent[], organizers: Organizer[]) {
     activeEvents: events.filter((e) => e.status === "LIVE").length,
     activeUsers: organizers.filter((o) => o.status === "active").length
   };
+}
+
+/** Events with the most participants or photos first; events with none are left out. */
+export function topEvents(events: AdminEvent[], by: "participants" | "photoCount", limit = 5): AdminEvent[] {
+  return events
+    .filter((e) => e[by] > 0)
+    .sort((a, b) => b[by] - a[by] || a.name.localeCompare(b.name))
+    .slice(0, limit);
 }
 
 export interface TopOrganizer {

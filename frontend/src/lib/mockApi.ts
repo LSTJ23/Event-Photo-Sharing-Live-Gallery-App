@@ -7,7 +7,15 @@ import type { EventInfo, Photo } from "./types";
 
 const events: EventInfo[] = [
   { id: "dlsu-cso-event", name: "DLSU CSO Event", date: "2026-10-14", location: "Manila", shareLinkActive: true },
-  { id: "event-2", name: "Event 2", date: "2026-12-03", location: "TBD", shareLinkActive: true }
+  { id: "event-2", name: "Event 2", date: "2026-12-03", location: "TBD", shareLinkActive: true },
+  // A past event, so Past events, Download all photos and Display gallery have something to show.
+  {
+    id: "freshmen-welcome-night",
+    name: "Freshmen Welcome Night",
+    date: "2026-08-22",
+    location: "Teresa Yuchengco Auditorium",
+    shareLinkActive: false
+  }
 ];
 
 function placeholderImage(n: number): string {
@@ -37,6 +45,20 @@ const photos: Photo[] = Array.from({ length: 24 }, (_, i) => {
     createdAt: new Date(Date.UTC(2026, 9, 14, 10, 30 + n * 3)).toISOString()
   };
 });
+
+// 12 photos from the past event.
+photos.push(
+  ...Array.from({ length: 12 }, (_, i) => {
+    const n = 12 - i;
+    return {
+      id: `welcome-${n}`,
+      eventId: "freshmen-welcome-night",
+      url: placeholderImage(100 + n),
+      sharedBy: sharedByLabel(sampleNames[(n + 2) % sampleNames.length], n % 4 === 0),
+      createdAt: new Date(Date.UTC(2026, 7, 22, 9, 10 + n * 7)).toISOString()
+    };
+  })
+);
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -69,4 +91,12 @@ export async function removePhotos(eventId: string, photoIds: string[]): Promise
   for (let i = photos.length - 1; i >= 0; i--) {
     if (photos[i].eventId === eventId && remove.has(photos[i].id)) photos.splice(i, 1);
   }
+}
+
+/** Reports sent from this browser (mock only). TODO (backend): store them and show them to the organizer. */
+export const sentReports: { eventId: string; photoId: string; reason: string; details?: string; at: string }[] = [];
+
+export async function reportPhoto(eventId: string, photoId: string, report: { reason: string; details?: string }): Promise<void> {
+  await wait(400);
+  sentReports.push({ eventId, photoId, ...report, at: new Date().toISOString() });
 }

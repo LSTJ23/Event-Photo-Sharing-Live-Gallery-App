@@ -135,12 +135,6 @@ export default function ManageGalleryPage() {
                 </div>
               )}
             </div>
-
-            <div className={styles.backButton}>
-              <Link href={galleryHref} className={`${styles.btnDark} ${styles.btnTall}`}>
-                Back to Gallery
-              </Link>
-            </div>
           </section>
 
           <section aria-labelledby="manage-photos">

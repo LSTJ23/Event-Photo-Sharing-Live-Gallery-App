@@ -1,9 +1,10 @@
 "use client";
 
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Suspense } from "react";
 import { CopyIcon, DownloadIcon } from "@/components/icons";
 import { PageHeader } from "@/components/admin/AdminShell";
+import { useBackTo } from "@/components/admin/useBackTo";
 import { useAdminStore } from "@/components/admin/AdminStore";
 import { downloadQrPng, QrCode } from "@/components/QrCode";
 import { useOrigin } from "@/components/useOrigin";
@@ -14,7 +15,7 @@ import { displayLink, shareLinkFor } from "@/lib/shareLink";
 
 /**
  * An event's QR code and share link, to copy, download or print. Back goes to
- * where you came from: the event's Gallery (opened with ?from=gallery) or Manage Events.
+ * where you came from: the page in ?from= (e.g. the event's Gallery), otherwise Manage Events.
  */
 export default function AdminQrPage() {
   // useSearchParams needs a Suspense boundary in the Next.js App Router.
@@ -27,8 +28,7 @@ export default function AdminQrPage() {
 
 function QrContent() {
   const { id } = useParams<{ id: string }>();
-  const fromGallery = useSearchParams().get("from") === "gallery";
-  const back = fromGallery ? `/admin/events/${id}/gallery` : "/admin/events";
+  const back = useBackTo("/admin/events");
   const { getEvent, notify } = useAdminStore();
   const origin = useOrigin();
   const event = getEvent(id);

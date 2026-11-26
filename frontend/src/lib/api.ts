@@ -10,6 +10,8 @@
 //   POST /events/:eventId/photos   multipart fields "photo" (the image) and
 //                                  "anonymous" ("true" | "false") → Photo (201)
 //
+//   POST /events/:eventId/photos/:photoId/reports   JSON { reason, details? } → 201
+//                                  (any participant; the event's organizer reviews it)
 //   DELETE /events/:eventId/photos/:photoId                  → 204 (admins only)
 //
 // For uploads, the backend should take the name from the signed-in user and
@@ -55,6 +57,24 @@ export async function uploadPhoto(eventId: string, image: Blob, options: UploadO
   body.append("photo", image, "photo.jpg");
   body.append("anonymous", String(options.anonymous));
   return request<Photo>(`/events/${encodeURIComponent(eventId)}/photos`, { method: "POST", body });
+}
+
+export interface ReportInput {
+  /** One of REPORT_REASONS (lib/reportReasons.ts). */
+  reason: string;
+  /** Optional, required when the reason is "Other". */
+  details?: string;
+}
+
+/** A participant reports a photo; it goes to the event organizer's Reported photos. */
+export async function reportPhoto(eventId: string, photoId: string, report: ReportInput): Promise<void> {
+  if (USE_MOCK_API) return mock.reportPhoto(eventId, photoId, report);
+  const response = await fetch(`${API_URL}/events/${encodeURIComponent(eventId)}/photos/${encodeURIComponent(photoId)}/reports`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(report)
+  });
+  if (!response.ok) throw new Error(`Reporting photo ${photoId} failed with status ${response.status}`);
 }
 
 /** Admins only: removes photos from the event gallery for everyone. */
