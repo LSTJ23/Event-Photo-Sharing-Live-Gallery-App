@@ -1,7 +1,6 @@
 // Stand-in backend used until the real API exists. Everything lives in memory
 // in the browser tab, so data resets on a full page reload and isn't shared
 // between devices.
-import { getCurrentUser } from "./currentUser";
 import { sharedByLabel } from "./sharedBy";
 import type { EventInfo, Photo } from "./types";
 
@@ -50,13 +49,13 @@ export async function listPhotos(eventId: string): Promise<Photo[]> {
   return photos.filter((photo) => photo.eventId === eventId);
 }
 
-export async function uploadPhoto(eventId: string, image: Blob, options: { anonymous: boolean }): Promise<Photo> {
+export async function uploadPhoto(eventId: string, image: Blob, options: { anonymous: boolean }, userName: string): Promise<Photo> {
   await wait(700);
   const photo: Photo = {
     id: `local-${Date.now()}`,
     eventId,
     url: URL.createObjectURL(image),
-    sharedBy: sharedByLabel(getCurrentUser().name, options.anonymous),
+    sharedBy: sharedByLabel(userName, options.anonymous),
     createdAt: new Date().toISOString()
   };
   photos.unshift(photo);

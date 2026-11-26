@@ -1,5 +1,5 @@
 import express from "express";
-import { createLoginHandler, type AuthService } from "./controllers/authController.js";
+import { createAuthHandlers, type AuthService } from "./controllers/authController.js";
 import { checkSupabaseDatabase } from "./supabase.js";
 
 export interface Database {
@@ -39,7 +39,13 @@ export function createApp(
   });
 
   if (services.auth) {
-    app.post("/api/auth/login", createLoginHandler(services.auth));
+    const auth = createAuthHandlers(services.auth);
+    app.post("/api/auth/code", auth.requestCode);
+    app.post("/api/auth/verify", auth.verifyCode);
+    app.post("/api/auth/login", auth.login);
+    app.get("/api/auth/me", auth.me);
+    app.post("/api/auth/password", auth.changePassword);
+    app.get("/api/auth/events/:eventId", auth.event);
   }
 
   return app;

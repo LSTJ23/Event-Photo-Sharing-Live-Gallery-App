@@ -1,61 +1,117 @@
 import type { Request, Response } from "express";
 
-// Defines the available user roles.
-export type Role = "ADMIN" | "ORGANIZER";
+export type Role = "admin" | "organizer" | "participant";
 
-// Stores the user's information.
-export interface User {
+export interface AuthUser {
   id: string;
-  name: string | null;
-  username: string;
+  name: string;
   email: string;
   role: Role;
+  mustChangePassword: boolean;
 }
 
-// Stores the result of a successful login.
-export interface LoginResult {
-  user: User;
+export interface AuthSession {
   accessToken: string;
+  refreshToken: string;
 }
 
-// Defines the authentication function required by the login handler.
+export interface LoginResult {
+  user: AuthUser;
+  session: AuthSession;
+}
+
+export interface PublicEvent {
+  id: string;
+  name: string;
+  date: string;
+  location: string;
+  shareLinkActive: boolean;
+}
+
+export class AuthError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
 export interface AuthService {
-  // Returns null if no user matches the username and email.
-  signIn(username: string, email: string): Promise<LoginResult | null>;
+  requestCode(email: string, eventId: string): Promise<void>;
+  verifyCode(email: string, code: string, name: string, eventId: string): Promise<LoginResult>;
+  signIn(email: string, password: string): Promise<LoginResult>;
+  currentUser(token: string, eventId?: string): Promise<AuthUser>;
+  changePassword(token: string, password: string): Promise<AuthUser>;
+  event(eventId: string): Promise<PublicEvent>;
 }
 
-// Creates a login handler using the provided authentication service.
-export function createLoginHandler(auth: AuthService) {
+function requiredString(value: unknown): string {
+  if (typeof value !== "string" || !value.trim() || value.length > 320) {
+    throw new AuthError(400, "Invalid or missing fields.");
+  }
+  return value.trim();
+}
+
+function passwordString(value: unknown): string {
+  if (typeof value !== "string" || !value || value.length > 1024) {
+    throw new AuthError(400, "Invalid or missing fields.");
+  }
+  return value;
+}
+
+function tokenFrom(request: Request): string {
+  const authorization = request.get("authorization");
+  if (!authorization?.startsWith("Bearer ") || !authorization.slice(7).trim()) {
+    throw new AuthError(401, "Please sign in.");
+  }
+  return authorization.slice(7).trim();
+}
+
+function handler(fn: (request: Request, response: Response) => Promise<void>) {
   return async (request: Request, response: Response) => {
-    // Gets the username and email from the request body.
-    const { username, email } = (request.body ?? {}) as {
-      username?: unknown;
-      email?: unknown;
-    };
-
-    // Checks if both fields contain valid, non-empty strings.
-    if (typeof username !== "string" || typeof email !== "string" || !username.trim() || !email.trim()) {
-      return response.status(400).json({ error: "Username and email are required." });
-    }
-
+    response.set("Cache-Control", "no-store");
     try {
-      // Converts both values to lowercase and removes extra spaces before login.
-      const result = await auth.signIn(username.toLowerCase().trim(), email.toLowerCase().trim());
-
-      // Returns 401 if no matching user is found.
-      if (!result) {
-        return response.status(401).json({ error: "Invalid username or email." });
+      await fn(request, response);
+    } catch (error) {
+      if (error instanceof AuthError) {
+        response.status(error.status).json({ error: error.message });
+      } else {
+        console.error("Authentication request failed:", error);
+        response.status(500).json({ error: "Authentication is temporarily unavailable." });
       }
-
-      // Returns the access token and user information after successful login.
-      return response.status(200).json({
-        message: "Login successful",
-        access_token: result.accessToken,
-        user: result.user
-      });
-    } catch {
-      // Returns 500 if an unexpected server error occurs.
-      return response.status(500).json({ error: "Internal server error during login." });
     }
+  };
+}
+
+export function createAuthHandlers(auth: AuthService) {
+  return {
+    requestCode: handler(async (req, res) => {
+      const email = requiredString(req.body?.email).toLowerCase();
+      const eventId = requiredString(req.body?.eventId);
+      await auth.requestCode(email, eventId);
+      res.status(200).json({ message: "If the address can receive email, a verification code has been sent." });
+    }),
+    verifyCode: handler(async (req, res) => {
+      const email = requiredString(req.body?.email).toLowerCase();
+      const code = requiredString(req.body?.code);
+      const name = requiredString(req.body?.name);
+      const eventId = requiredString(req.body?.eventId);
+      res.json(await auth.verifyCode(email, code, name, eventId));
+    }),
+    login: handler(async (req, res) => {
+      const email = requiredString(req.body?.email).toLowerCase();
+      const password = passwordString(req.body?.password);
+      res.json(await auth.signIn(email, password));
+    }),
+    me: handler(async (req, res) => {
+      const eventId = req.query.eventId === undefined ? undefined : requiredString(req.query.eventId);
+      res.json({ user: await auth.currentUser(tokenFrom(req), eventId) });
+    }),
+    changePassword: handler(async (req, res) => {
+      const password = passwordString(req.body?.password);
+      if (password.length < 8) throw new AuthError(400, "Password must be at least 8 characters.");
+      res.json({ user: await auth.changePassword(tokenFrom(req), password) });
+    }),
+    event: handler(async (req, res) => {
+      res.json(await auth.event(requiredString(req.params.eventId)));
+    }),
   };
 }

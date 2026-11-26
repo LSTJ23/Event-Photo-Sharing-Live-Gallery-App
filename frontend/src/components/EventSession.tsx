@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { getEvent } from "@/lib/api";
+import { AuthRequestError, getParticipantEvent, type AuthUser } from "@/lib/auth";
+import { useCurrentUser } from "./useCurrentUser";
 import type { EventInfo } from "@/lib/types";
 import adminStyles from "./admin.module.css";
 import styles from "./flow.module.css";
@@ -14,6 +17,7 @@ interface PhotoDraft {
 
 interface EventSessionValue {
   event: EventInfo;
+  user: AuthUser;
   /** The photo the participant just took, waiting to be shared. */
   draft: PhotoDraft | null;
   setDraft: (blob: Blob) => void;
@@ -40,23 +44,45 @@ export function EventSession({
   /** "admin" shows loading and error messages in the organizer dashboard's style. */
   variant?: "participant" | "admin";
 }) {
-  const [load, setLoad] = useState<LoadState>({ status: "loading" });
+  const pathname = usePathname();
+  if (variant === "participant" && pathname.split("/").filter(Boolean).length === 2) {
+    return <>{children}</>;
+  }
+  return <LoadedEventSession eventId={eventId} variant={variant}>{children}</LoadedEventSession>;
+}
+
+function LoadedEventSession({
+  eventId,
+  children,
+  variant
+}: {
+  eventId: string;
+  children: React.ReactNode;
+  variant: "participant" | "admin";
+}) {
+  const [loaded, setLoaded] = useState<{ eventId: string; variant: "participant" | "admin"; value: LoadState }>({
+    eventId, variant, value: { status: "loading" }
+  });
+  const load: LoadState = loaded.eventId === eventId && loaded.variant === variant
+    ? loaded.value : { status: "loading" };
+  const currentUser = useCurrentUser(eventId);
   const [draft, setDraftState] = useState<PhotoDraft | null>(null);
   const draftUrl = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    getEvent(eventId)
+    const setLoad = (value: LoadState) => setLoaded({ eventId, variant, value });
+    (variant === "participant" ? getParticipantEvent(eventId) : getEvent(eventId))
       .then((event) => {
         if (active) setLoad(event ? { status: "ready", event } : { status: "missing" });
       })
-      .catch(() => {
-        if (active) setLoad({ status: "error" });
+      .catch((error: unknown) => {
+        if (active) setLoad(error instanceof AuthRequestError && error.status === 404 ? { status: "missing" } : { status: "error" });
       });
     return () => {
       active = false;
     };
-  }, [eventId]);
+  }, [eventId, variant]);
 
   const setDraft = useCallback((blob: Blob) => {
     if (draftUrl.current) URL.revokeObjectURL(draftUrl.current);
@@ -78,6 +104,23 @@ export function EventSession({
     },
     []
   );
+
+  if (currentUser.status !== "ready" || currentUser.user.mustChangePassword) {
+    return (
+      <main className={styles.screen}>
+        <div className={styles.centered}>
+          {currentUser.status === "loading" ? <p>Checking your session...</p> : currentUser.status === "error" ? (
+            <p role="alert">Unable to check your session. Check your connection and try again.</p>
+          ) : (
+            <>
+              <p>Sign in to continue.</p>
+              <Link href={variant === "participant" ? `/portal?event=${encodeURIComponent(eventId)}` : "/portal"} className={styles.btnSecondary}>Go to login</Link>
+            </>
+          )}
+        </div>
+      </main>
+    );
+  }
 
   if (load.status !== "ready" && variant === "admin") {
     return (
@@ -131,7 +174,7 @@ export function EventSession({
   }
 
   return (
-    <EventSessionContext.Provider value={{ event: load.event, draft, setDraft, clearDraft }}>
+    <EventSessionContext.Provider value={{ event: load.event, user: currentUser.user, draft, setDraft, clearDraft }}>
       {children}
     </EventSessionContext.Provider>
   );

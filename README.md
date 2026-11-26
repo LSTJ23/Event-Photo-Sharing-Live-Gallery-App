@@ -67,17 +67,17 @@ are removed or otherwise handled.
 
 Application tables and analytics views are restricted to the backend's
 `service_role`; browser clients cannot read them directly or subscribe to
-photo rows through Realtime. A future backend must verify the participant's
-Supabase Auth session (and reject anonymous Auth sessions), authorize every
-operation, use the session's user ID rather than a client-supplied identity,
-and omit participant identity from anonymous public responses. It must also
-provide signed photo URLs and resolve event links by `share_slug`. The frontend
-and Express API are still mocks/health checks and do not implement these flows.
+photo rows through Realtime. The login API verifies Supabase Auth sessions,
+rejects anonymous Auth sessions, and resolves event links by `share_slug`.
+Photo and dashboard APIs are not implemented yet. When added, they must verify
+the session, enforce roles and event membership, use the session's user ID
+rather than a client-supplied identity, omit participant identity from anonymous
+public responses, and provide signed photo URLs.
 
 ### Connect the backend
 
-Copy `backend/.env.example` to `backend/.env` and set `SUPABASE_URL` and
-`SUPABASE_SECRET_KEY` from the Supabase dashboard. The secret key is server-only:
+Copy `backend/.env.example` to `backend/.env` and set `SUPABASE_URL`,
+`SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SECRET_KEY` from the Supabase dashboard. The secret key is server-only:
 do not commit it, put it in a frontend variable, or share it in chat. Start the
 backend and visit `http://localhost:3001/health/supabase`. A successful response
 means the backend could query the `events` table through the Supabase Data API.
@@ -86,8 +86,32 @@ Failures return HTTP 503; see the backend log for details.
 This connection does not require the PostgreSQL password. For direct PostgreSQL
 connections instead, set `DATABASE_URL` to an authorized session-pooler
 connection string; `/health/db` checks that separate connection. The integration
-test also uses `DATABASE_URL`. Neither health check connects the mock screens
-or implements authentication and authorization.
+test also uses `DATABASE_URL`. Neither health check verifies the login flow.
+
+### Login setup
+
+Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in
+`frontend/.env.local` to the same Supabase project. Set `AUTH_BACKEND_URL` to
+the Express API's server-reachable URL; it defaults to `http://localhost:3001`
+for local development. Next.js proxies `/api/auth/*` requests to that API.
+Set the environment variables for both deployed services as well.
+
+Enable the Supabase email provider and configure email delivery. The **Confirm
+signup** and **Magic Link** email templates must include `{{ .Token }}` so
+participants can enter the one-time code in the portal. Supabase's email and
+verification rate limits apply; configure production SMTP and appropriate
+gateway rate limits. An administrator must provision staff in Supabase Auth
+and create a corresponding active `staff_users` row. Staff with
+`must_change_password` set are required to change their password after login.
+
+Participants open an active event's `/e/<share_slug>` link, request an email
+code, and verify it to create or update their membership. Staff use their
+Supabase email and password; their role is read from `staff_users`, not trusted
+from the selected role. Sessions are held and refreshed by Supabase's browser
+client. The API verifies bearer tokens and checks membership or staff status.
+The photo and dashboard screens still use mock data, and mock-created events
+are not real Supabase events; use an active database event's `share_slug` to
+test participant login. Do not use production accounts or events for testing.
 
 The second migration enables `pg_cron` and schedules `refresh_event_statuses()`
 every minute. Supabase migrations require appropriate administrative access;
@@ -124,7 +148,7 @@ Routes in `frontend/src/app`:
 
 | Route | Screen |
 | --- | --- |
-| `/portal` | Prototype access forms: an event QR link opens participant access with the event selected; organizers and admins can switch to dashboard access. Credentials are not authenticated or saved. Without an event, participants are asked to open an event link or use their phone's camera to scan its QR code. |
+| `/portal` | Login: participants verify an email code for the selected event; organizers and admins use their staff credentials. Without an event, participants are asked to open an event link or scan its QR code. |
 | `/e/<eventId>` | The event's public share link (also what its QR code holds). Opens participant access, then the event camera; staff can switch to dashboard access. |
 | `/scan` | Existing in-app QR scanner, not used by the normal access flow |
 | `/e/<eventId>/camera` | Camera: take a photo or choose one from the album |
@@ -163,11 +187,11 @@ Admin dashboard (phone and desktop), in `frontend/src/app/admin`, with a sidebar
 
 Until the API exists, the admin pages use sample data from `frontend/src/lib/adminData.ts`, kept in memory by `frontend/src/components/admin/AdminStore.tsx` (each action there is marked for the backend).
 
-The portal is a routing prototype, not an authentication system. `getCurrentUser()` in `frontend/src/lib/currentUser.ts` still returns a placeholder admin, so dashboard role gates do not enforce real access. A future backend must authenticate users and enforce authorization.
+The frontend checks the signed-in role before showing dashboards. These client-side gates are not security boundaries: future dashboard and photo APIs must independently verify the session, role, first-login password flag, and event permissions.
 
 QR codes are drawn by `frontend/src/lib/qr.ts` (no extra packages needed).
 There are no event codes: participants join by opening the share link or scanning the QR code with their phone's camera. Staff can open the same link and choose organizer or admin login, or use `/portal` directly.
 
-Until the API exists, the frontend uses in-browser mock data from `frontend/src/lib/mockApi.ts`. Try it by opening `http://localhost:3000/e/dlsu-cso-event`. You can configure `NEXT_PUBLIC_API_URL` and set `NEXT_PUBLIC_USE_MOCK_API=true` to keep using mock data while the API is being built (see `.env.example`). When the backend implements the routes listed at the top of `frontend/src/lib/api.ts` and allows your frontend origin through CORS, unset the mock flag or set it to `false` to use the API. Without an API URL, the frontend continues to use mock data. These public variables are embedded at build time, so redeploy after changing them.
+Until the photo API exists, the frontend uses in-browser mock photo data from `frontend/src/lib/mockApi.ts`. Authentication and participant event lookup always use the login API and require a real active event. You can configure `NEXT_PUBLIC_API_URL` and set `NEXT_PUBLIC_USE_MOCK_API=true` to keep using mock data while the photo API is being built (see `.env.example`). When the backend implements the routes listed at the top of `frontend/src/lib/api.ts` and allows your frontend origin through CORS, unset the mock flag or set it to `false` to use the API. Without an API URL, the frontend continues to use mock data. These public variables are embedded at build time, so redeploy after changing them.
 
 The camera only works on `https://` pages or `localhost`.

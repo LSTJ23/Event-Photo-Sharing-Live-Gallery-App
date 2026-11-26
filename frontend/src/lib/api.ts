@@ -49,8 +49,8 @@ export interface UploadOptions {
   anonymous: boolean;
 }
 
-export async function uploadPhoto(eventId: string, image: Blob, options: UploadOptions): Promise<Photo> {
-  if (USE_MOCK_API) return mock.uploadPhoto(eventId, image, options);
+export async function uploadPhoto(eventId: string, image: Blob, options: UploadOptions, userName: string): Promise<Photo> {
+  if (USE_MOCK_API) return mock.uploadPhoto(eventId, image, options, userName);
   const body = new FormData();
   body.append("photo", image, "photo.jpg");
   body.append("anonymous", String(options.anonymous));

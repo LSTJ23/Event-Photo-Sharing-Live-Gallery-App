@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChartIcon, ChevronLeftIcon, CloseIcon, FlagIcon, GalleryIcon, MenuIcon, StarIcon, UsersIcon } from "../icons";
 import { AdminStoreProvider, useAdminStore } from "./AdminStore";
-import { getCurrentUser } from "@/lib/currentUser";
+import { useCurrentUser } from "../useCurrentUser";
 import styles from "./dashboard.module.css";
 
 export const initials = (name: string) =>
@@ -80,18 +80,19 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function UserFoot() {
-  const user = getCurrentUser();
+  const state = useCurrentUser();
+  const name = state.status === "ready" ? state.user.name : "";
   return (
     <div className={styles.sideFoot}>
       <span className={styles.avatar} aria-hidden="true">
-        {initials(user.name)}
+        {initials(name)}
       </span>
       <span>
-        {user.name}
+        {name}
         <br />
         <span className={styles.muted}>Admin</span>
       </span>
-      <Link href="/portal" className={styles.textButton}>
+      <Link href="/logout" className={styles.textButton}>
         Log out
       </Link>
     </div>
