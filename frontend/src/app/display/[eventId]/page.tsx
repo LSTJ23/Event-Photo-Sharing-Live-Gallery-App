@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- photo URLs can be blob: or any storage host */
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Stage } from "@/components/display/Stage";
 import {
   ChevronLeftIcon,
@@ -62,7 +62,7 @@ function Presenter() {
   const thumbs = useRef<HTMLOListElement>(null);
 
   const back = params.get("back")?.startsWith("/") ? params.get("back")! : "/events";
-  const list = photos.status === "ready" ? photos.photos : [];
+  const list = useMemo(() => (photos.status === "ready" ? photos.photos : []), [photos]);
   const count = list.length;
   const index = count ? pos.index % count : 0;
   const current = count ? list[index] : null;
