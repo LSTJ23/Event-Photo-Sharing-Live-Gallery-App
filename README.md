@@ -124,8 +124,9 @@ Routes in `frontend/src/app`:
 
 | Route | Screen |
 | --- | --- |
-| `/e/<eventId>` | The event's public share link (also what its QR code holds). Goes straight to the camera. |
-| `/scan` | 01 QR scanner (reads the event's QR code, then goes to the camera) |
+| `/portal` | Prototype access forms: an event QR link opens participant access with the event selected; organizers and admins can switch to dashboard access. Credentials are not authenticated or saved. Without an event, participants are asked to open an event link or use their phone's camera to scan its QR code. |
+| `/e/<eventId>` | The event's public share link (also what its QR code holds). Opens participant access, then the event camera; staff can switch to dashboard access. |
+| `/scan` | Existing in-app QR scanner, not used by the normal access flow |
 | `/e/<eventId>/camera` | Camera: take a photo or choose one from the album |
 | `/e/<eventId>/preview` | 02 Photo preview |
 | `/e/<eventId>/share` | 03 Share photo (with name or anonymously), then 03b "Photo shared!" |
@@ -142,7 +143,7 @@ Organizer dashboard (phone and desktop), in `frontend/src/app/(organizer)`:
 | `/events/<eventId>/gallery` | 06 The event's gallery (All Photos / Live Gallery), with 07–08 the share-link dialog and QR code |
 | `/events/<eventId>/gallery/manage` | 09 Manage gallery: details, share link and QR code, remove photos (09b confirmation) |
 | `/reports` and `/reports/<id>` | Reported photos, and one report with Delete photo / Keep photo |
-| `/login` | Placeholder "Logged out" page until the login page exists |
+| `/login` | Redirects to `/portal` |
 
 Admin dashboard (phone and desktop), in `frontend/src/app/admin`, with a sidebar (a menu on phones). Admins create events and choose the event organizer for each one (the organizer gets an email invite), and create and edit organizer accounts. They can see reported photos, but only the event's organizer can keep or remove them.
 
@@ -162,10 +163,10 @@ Admin dashboard (phone and desktop), in `frontend/src/app/admin`, with a sidebar
 
 Until the API exists, the admin pages use sample data from `frontend/src/lib/adminData.ts`, kept in memory by `frontend/src/components/admin/AdminStore.tsx` (each action there is marked for the backend).
 
-Who can open what is set by `getCurrentUser().role` in `frontend/src/lib/currentUser.ts` (filled in by login): admins can open everything, organizers the organizer pages, participants neither. The backend must check this too.
+The portal is a routing prototype, not an authentication system. `getCurrentUser()` in `frontend/src/lib/currentUser.ts` still returns a placeholder admin, so dashboard role gates do not enforce real access. A future backend must authenticate users and enforce authorization.
 
 QR codes are drawn by `frontend/src/lib/qr.ts` (no extra packages needed).
-There are no event codes: participants join by opening the share link or scanning the QR code. Safari and Firefox can't scan QR codes inside a web page, so on those browsers people scan the QR code with their phone's Camera app, which opens the share link.
+There are no event codes: participants join by opening the share link or scanning the QR code with their phone's camera. Staff can open the same link and choose organizer or admin login, or use `/portal` directly.
 
 Until the API exists, the frontend uses in-browser mock data from `frontend/src/lib/mockApi.ts`. Try it by opening `http://localhost:3000/e/dlsu-cso-event`. You can configure `NEXT_PUBLIC_API_URL` and set `NEXT_PUBLIC_USE_MOCK_API=true` to keep using mock data while the API is being built (see `.env.example`). When the backend implements the routes listed at the top of `frontend/src/lib/api.ts` and allows your frontend origin through CORS, unset the mock flag or set it to `false` to use the API. Without an API URL, the frontend continues to use mock data. These public variables are embedded at build time, so redeploy after changing them.
 

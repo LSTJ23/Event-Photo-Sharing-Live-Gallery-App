@@ -121,8 +121,8 @@ export function EventSession({
         </div>
         {load.status !== "loading" && (
           <div className={styles.footer}>
-            <Link href="/scan" className={styles.btnSecondary}>
-              Scan again
+            <Link href="/portal" className={styles.btnSecondary}>
+              Back to portal
             </Link>
           </div>
         )}

@@ -8,9 +8,9 @@ import styles from "@/components/flow.module.css";
 import { parseEventLink } from "@/lib/eventLink";
 
 // Participants join an event in one of two ways:
-// - opening the event's share link, which skips this page and goes straight
-//   to the camera (see app/e/[eventId]/page.tsx), or
+// - opening the event's share link, which skips this scanner, or
 // - scanning the event's QR code here. The QR code holds the same link.
+// Both routes go through the participant portal before opening the camera.
 //
 // QR scanning uses the browser's built-in BarcodeDetector (Chrome and Edge,
 // including on Android). Safari and Firefox don't have it; there, people scan
@@ -111,7 +111,7 @@ export default function ScanPage() {
         <button
           type="button"
           className={styles.btnPrimary}
-          onClick={() => eventId && router.push(`/e/${eventId}/camera`)}
+          onClick={() => eventId && router.push(`/e/${encodeURIComponent(eventId)}`)}
           disabled={!eventId}
         >
           Continue <span aria-hidden="true">→</span>
