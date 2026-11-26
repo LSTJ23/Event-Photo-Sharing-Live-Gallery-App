@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-// Participants start by scanning the event QR code.
+// Participants join from an event link or QR code; staff can use the portal.
 export default function Home() {
-  redirect("/scan");
+  redirect("/portal");
 }
 

@@ -28,7 +28,12 @@ export function parseEventLink(raw: string): string | null {
   const segments = url.pathname.split("/").filter(Boolean);
   const marker = segments.indexOf("e");
   if (marker !== -1 && segments[marker + 1]) {
-    return eventSlug(decodeURIComponent(segments[marker + 1])) || null;
+    try {
+      return eventSlug(decodeURIComponent(segments[marker + 1])) || null;
+    } catch (error) {
+      if (error instanceof URIError) return null;
+      throw error;
+    }
   }
   return null;
 }

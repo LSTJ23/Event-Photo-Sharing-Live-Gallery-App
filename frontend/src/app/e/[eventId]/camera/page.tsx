@@ -47,7 +47,7 @@ export default function CameraPage() {
     >
       <ScreenHeader
         title={event.name}
-        backHref="/scan"
+        backHref={`/portal?event=${encodeURIComponent(event.id)}`}
         right={
           <Link href={`/e/${event.id}/gallery?view=live`} className={styles.headerAction} aria-label="Live Gallery">
             <GalleryIcon size={17} /> <span className={styles.headerActionLabel}>Live Gallery</span>
