@@ -439,6 +439,13 @@ img {
   z-index: 50; 
 }
 
+.portal-theme .form-error {
+  color: var(--danger);
+  font-family: var(--font);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
 .portal-theme .input-group label {
   font-size: 0.75rem;
   color: #444444;
