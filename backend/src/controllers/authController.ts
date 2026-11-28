@@ -35,8 +35,7 @@ export class AuthError extends Error {
 }
 
 export interface AuthService {
-  requestCode(email: string, eventId: string): Promise<void>;
-  verifyCode(email: string, code: string, name: string, eventId: string): Promise<LoginResult>;
+  joinEvent(email: string, name: string, eventId: string): Promise<LoginResult>;
   signIn(email: string, password: string): Promise<LoginResult>;
   currentUser(token: string, eventId?: string): Promise<AuthUser>;
   changePassword(token: string, password: string): Promise<AuthUser>;
@@ -55,6 +54,14 @@ function passwordString(value: unknown): string {
     throw new AuthError(400, "Invalid or missing fields.");
   }
   return value;
+}
+
+function emailString(value: unknown): string {
+  const email = requiredString(value).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new AuthError(400, "Enter a valid email address.");
+  }
+  return email;
 }
 
 function tokenFrom(request: Request): string {
@@ -83,18 +90,11 @@ function handler(fn: (request: Request, response: Response) => Promise<void>) {
 
 export function createAuthHandlers(auth: AuthService) {
   return {
-    requestCode: handler(async (req, res) => {
-      const email = requiredString(req.body?.email).toLowerCase();
-      const eventId = requiredString(req.body?.eventId);
-      await auth.requestCode(email, eventId);
-      res.status(200).json({ message: "If the address can receive email, a verification code has been sent." });
-    }),
-    verifyCode: handler(async (req, res) => {
-      const email = requiredString(req.body?.email).toLowerCase();
-      const code = requiredString(req.body?.code);
+    joinEvent: handler(async (req, res) => {
+      const email = emailString(req.body?.email);
       const name = requiredString(req.body?.name);
       const eventId = requiredString(req.body?.eventId);
-      res.json(await auth.verifyCode(email, code, name, eventId));
+      res.json(await auth.joinEvent(email, name, eventId));
     }),
     login: handler(async (req, res) => {
       const email = requiredString(req.body?.email).toLowerCase();

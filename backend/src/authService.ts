@@ -1,6 +1,15 @@
 import { createClient, type Session, type SupabaseClient, type User } from "@supabase/supabase-js";
 import { AuthError, type AuthService, type AuthUser, type LoginResult } from "./controllers/authController.js";
 
+function participantDetails(value: unknown): { name: string; email: string } {
+  if (typeof value !== "object" || value === null ||
+      !("name" in value) || typeof value.name !== "string" ||
+      !("email" in value) || typeof value.email !== "string") {
+    throw new Error("Invalid participant attendance returned by the database.");
+  }
+  return { name: value.name, email: value.email };
+}
+
 export function createSupabaseAuthService(
   admin: SupabaseClient,
   env: NodeJS.ProcessEnv = process.env,
@@ -39,7 +48,7 @@ export function createSupabaseAuthService(
 
   async function verifiedUser(token: string): Promise<User> {
     const { data, error } = await admin.auth.getUser(token);
-    if (error || !data.user || data.user.is_anonymous || !data.user.email_confirmed_at || !data.user.email) {
+    if (error || !data.user || (!data.user.is_anonymous && (!data.user.email_confirmed_at || !data.user.email))) {
       if (error && (!error.status || error.status >= 500)) throw error;
       throw new AuthError(401, "Session expired. Please sign in again.");
     }
@@ -71,33 +80,35 @@ export function createSupabaseAuthService(
   }
 
   return {
-    async requestCode(email, eventId) {
-      await findEvent(eventId);
-      const { error } = await authClient().auth.signInWithOtp({ email });
+    async joinEvent(email, name, eventId) {
+      const event = await findEvent(eventId);
+      const { data, error } = await authClient().auth.signInAnonymously();
       if (error) {
         if (error.status === 429) throw new AuthError(429, "Too many requests. Please try again later.");
-        if (error.status && error.status < 500) throw new AuthError(400, "Unable to send a verification code. Check your email and try again.");
         throw error;
       }
-    },
-    async verifyCode(email, code, name, eventId) {
-      const event = await findEvent(eventId);
-      const { data, error } = await authClient().auth.verifyOtp({ email, token: code, type: "email" });
-      if (error || !data.session || !data.user || data.user.is_anonymous || !data.user.email_confirmed_at) {
-        if (error?.status === 429) throw new AuthError(429, "Too many attempts. Please try again later.");
-        if (error && (!error.status || error.status >= 500)) throw error;
-        throw new AuthError(401, "Invalid or expired verification code.");
+      if (!data.session || !data.user || !data.user.is_anonymous) {
+        throw new Error("Anonymous sign-in did not return a guest session.");
       }
-      if (await findStaff(data.user.id)) {
-        throw new AuthError(403, "Staff must use dashboard login.");
+      try {
+        const { data: participant, error: membershipError } = await admin.rpc("join_event_guest", {
+          p_event_id: event.id, p_auth_user_id: data.user.id, p_email: email, p_name: name
+        }).single();
+        if (membershipError) throw membershipError;
+        const details = participantDetails(participant);
+        return result({
+          id: data.user.id, name: details.name, email: details.email,
+          role: "participant", mustChangePassword: false
+        }, data.session);
+      } catch (joinError) {
+        try {
+          const { error: cleanupError } = await admin.auth.admin.deleteUser(data.user.id);
+          if (cleanupError) console.error("Could not remove failed guest account:", cleanupError);
+        } catch (cleanupError) {
+          console.error("Could not remove failed guest account:", cleanupError);
+        }
+        throw joinError;
       }
-      const { error: membershipError } = await admin.from("participants").upsert(
-        { event_id: event.id, auth_user_id: data.user.id, name },
-        { onConflict: "event_id,auth_user_id" }
-      );
-      if (membershipError) throw membershipError;
-      if (!data.user.email) throw new Error("Verified user has no email.");
-      return result({ id: data.user.id, name, email: data.user.email, role: "participant", mustChangePassword: false }, data.session);
     },
     async signIn(email, password) {
       const { data, error } = await authClient().auth.signInWithPassword({ email, password });
@@ -112,13 +123,24 @@ export function createSupabaseAuthService(
     },
     async currentUser(token, eventId) {
       const user = await verifiedUser(token);
-      const staff = await findStaff(user.id);
+      const staff = user.is_anonymous ? null : await findStaff(user.id);
       if (staff) {
         await requirePasswordLogin(token);
         return staffUser(staff);
       }
       if (!eventId) throw new AuthError(403, "An event is required.");
       const event = await findEvent(eventId);
+      if (user.is_anonymous) {
+        const { data, error } = await admin.from("participant_sessions")
+          .select("participants(name,email)")
+          .eq("event_id", event.id)
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (!data?.participants) throw new AuthError(403, "Join this event first.");
+        const details = participantDetails(data.participants);
+        return { id: user.id, ...details, role: "participant", mustChangePassword: false };
+      }
       const { data, error } = await admin.from("participants")
         .select("name")
         .eq("event_id", event.id)
@@ -130,6 +152,7 @@ export function createSupabaseAuthService(
     },
     async changePassword(token, password) {
       const user = await verifiedUser(token);
+      if (user.is_anonymous) throw new AuthError(403, "This account does not have staff access.");
       const staff = await findStaff(user.id);
       if (!staff) throw new AuthError(403, "This account does not have staff access.");
       await requirePasswordLogin(token);

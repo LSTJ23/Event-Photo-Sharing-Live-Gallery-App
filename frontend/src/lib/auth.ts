@@ -42,13 +42,9 @@ async function saveSession(result: LoginResult): Promise<AuthUser> {
   return result.user;
 }
 
-export async function requestCode(email: string, eventId: string): Promise<void> {
-  await request("/code", { method: "POST", body: JSON.stringify({ email, eventId }) });
-}
-
-export async function verifyCode(email: string, code: string, name: string, eventId: string): Promise<AuthUser> {
-  return saveSession(await request<LoginResult>("/verify", {
-    method: "POST", body: JSON.stringify({ email, code, name, eventId })
+export async function joinEvent(email: string, name: string, eventId: string): Promise<AuthUser> {
+  return saveSession(await request<LoginResult>("/join", {
+    method: "POST", body: JSON.stringify({ email, name, eventId })
   }));
 }
 
