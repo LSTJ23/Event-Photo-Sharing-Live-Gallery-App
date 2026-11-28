@@ -10,6 +10,8 @@ const session = {
   access_token: "access", refresh_token: "refresh", token_type: "bearer",
   expires_in: 3600, user
 };
+const guest = { ...user, id: "guest-1", is_anonymous: true, email: undefined, email_confirmed_at: undefined };
+const guestSession = { ...session, user: guest };
 const event = {
   id: "event-uuid", share_slug: "event-link", name: "Event",
   start_at: "2026-11-26T00:00:00Z", location: "Manila", share_link_active: true
@@ -22,20 +24,27 @@ const staff = {
 describe("Supabase authentication service", () => {
   let eventRow: typeof event | null;
   let staffRow: typeof staff | null;
-  let membership: unknown;
+  let guestJoin: unknown;
+  let guestMembership: { participants: { name: string; email: string } } | null;
+  let guestJoinFails: boolean;
   let participantRow: { name: string } | null;
   let passwordUpdated: boolean;
 
   const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url);
     if (url.pathname.endsWith("/events")) return Response.json(eventRow);
+    if (url.pathname.endsWith("/rpc/join_event_guest")) {
+      guestJoin = JSON.parse(String(init?.body));
+      if (guestJoinFails) return Response.json({ code: "XX000", message: "Database unavailable" }, { status: 500 });
+      return Response.json({ name: "Original Name", email: "person@example.com" });
+    }
+    if (url.pathname.endsWith("/participant_sessions")) return Response.json(guestMembership);
     if (url.pathname.endsWith("/staff_users")) {
       if (init?.method === "PATCH") return Response.json({ ...staffRow, must_change_password: false });
       return Response.json(staffRow);
     }
     if (url.pathname.endsWith("/participants")) {
-      if (init?.method === "POST") membership = JSON.parse(String(init.body));
-      return Response.json(init?.method === "POST" ? null : participantRow);
+      return Response.json(participantRow);
     }
     throw new Error(`Unexpected request: ${url.pathname}`);
   });
@@ -49,11 +58,12 @@ describe("Supabase authentication service", () => {
     vi.restoreAllMocks();
     eventRow = event;
     staffRow = null;
-    membership = undefined;
+    guestJoin = undefined;
+    guestJoinFails = false;
+    guestMembership = { participants: { name: "Original Name", email: "person@example.com" } };
     participantRow = { name: "Participant" };
     passwordUpdated = false;
-    vi.spyOn(publicClient.auth, "verifyOtp").mockResolvedValue({ data: { user, session }, error: null });
-    vi.spyOn(publicClient.auth, "signInWithOtp").mockResolvedValue({ data: { user: null, session: null }, error: null });
+    vi.spyOn(publicClient.auth, "signInAnonymously").mockResolvedValue({ data: { user: guest, session: guestSession }, error: null });
     vi.spyOn(publicClient.auth, "signInWithPassword").mockResolvedValue({ data: { user, session }, error: null });
     vi.spyOn(admin.auth, "getUser").mockResolvedValue({ data: { user }, error: null });
     vi.spyOn(admin.auth.admin, "updateUserById").mockImplementation(async () => {
@@ -62,32 +72,44 @@ describe("Supabase authentication service", () => {
     });
   });
 
-  it("rejects an unavailable event before sending a code", async () => {
+  it("rejects an unavailable event before creating a guest session", async () => {
     eventRow = null;
-    await expect(service.requestCode(user.email, "missing")).rejects.toMatchObject({ status: 404 });
-    expect(publicClient.auth.signInWithOtp).not.toHaveBeenCalled();
+    await expect(service.joinEvent(user.email, "Participant", "missing")).rejects.toMatchObject({ status: 404 });
+    expect(publicClient.auth.signInAnonymously).not.toHaveBeenCalled();
   });
 
-  it("creates event membership only after verifying the email code", async () => {
-    const result = await service.verifyCode(user.email, "123456", "Participant", "event-link");
+  it("joins with a guest session and returns the existing attendance name", async () => {
+    const result = await service.joinEvent(user.email, "New Name", "event-link");
     expect(result.user.role).toBe("participant");
-    expect(publicClient.auth.verifyOtp).toHaveBeenCalledWith({ email: user.email, token: "123456", type: "email" });
-    expect(membership).toEqual({ event_id: "event-uuid", auth_user_id: "user-1", name: "Participant" });
+    expect(result.user.name).toBe("Original Name");
+    expect(guestJoin).toEqual({ p_event_id: "event-uuid", p_auth_user_id: "guest-1", p_email: user.email, p_name: "New Name" });
   });
 
-  it("does not grant a participant session to a staff account", async () => {
-    staffRow = staff;
-    await expect(service.verifyCode(user.email, "123456", "Staff", "event-link")).rejects.toMatchObject({ status: 403 });
-    expect(membership).toBeUndefined();
+  it("resolves guest sessions only through their event membership", async () => {
+    vi.spyOn(admin.auth, "getUser").mockResolvedValue({ data: { user: guest }, error: null });
+    const result = await service.currentUser("access", "event-link");
+    expect(result).toMatchObject({ id: "guest-1", name: "Original Name", email: user.email, role: "participant" });
+    guestMembership = null;
+    await expect(service.currentUser("access", "event-link")).rejects.toMatchObject({ status: 403 });
+    await expect(service.changePassword("access", "new-password")).rejects.toMatchObject({ status: 403 });
   });
 
-  it("does not accept an invalid code or create a membership", async () => {
-    vi.spyOn(publicClient.auth, "verifyOtp").mockResolvedValue({
+  it("does not create attendance when anonymous sign-in fails", async () => {
+    vi.spyOn(publicClient.auth, "signInAnonymously").mockResolvedValue({
       data: { user: null, session: null },
-      error: { name: "AuthApiError", message: "Invalid code", status: 403, __isAuthError: true }
+      error: { name: "AuthApiError", message: "Rate limited", status: 429, __isAuthError: true }
     });
-    await expect(service.verifyCode(user.email, "bad", "Participant", "event-link")).rejects.toMatchObject({ status: 401 });
-    expect(membership).toBeUndefined();
+    await expect(service.joinEvent(user.email, "Participant", "event-link")).rejects.toMatchObject({ status: 429 });
+    expect(guestJoin).toBeUndefined();
+  });
+
+  it("removes the guest account if attendance creation fails", async () => {
+    guestJoinFails = true;
+    const deleteUser = vi.spyOn(admin.auth.admin, "deleteUser").mockResolvedValue({
+      data: { user: null }, error: null
+    });
+    await expect(service.joinEvent(user.email, "Participant", "event-link")).rejects.toMatchObject({ code: "XX000" });
+    expect(deleteUser).toHaveBeenCalledWith("guest-1");
   });
 
   it("rejects a participant session without membership in the requested event", async () => {

@@ -18,19 +18,28 @@ export function useCurrentUser(eventId?: string): UserState {
   useEffect(() => {
     let active = true;
     let sequence = 0;
+    let verifiedUserId: string | undefined;
     const setState = (state: UserState) => setSnapshot({ eventId, state });
-    const load = async (token: string | undefined) => {
+    const load = async (token: string | undefined, userId: string | undefined) => {
       const current = ++sequence;
       if (!token) {
+        verifiedUserId = undefined;
         if (active) setState({ status: "signedOut" });
         return;
       }
-      if (active) setState({ status: "loading" });
+      if (!userId || userId !== verifiedUserId) {
+        verifiedUserId = undefined;
+        if (active) setState({ status: "loading" });
+      }
       try {
         const user = await currentUser(token, eventId);
-        if (active && current === sequence) setState({ status: "ready", user });
+        if (active && current === sequence) {
+          verifiedUserId = user.id;
+          setState({ status: "ready", user });
+        }
       } catch (error) {
         if (active && current === sequence) {
+          verifiedUserId = undefined;
           setState(error instanceof AuthRequestError && (error.status === 401 || error.status === 403)
             ? { status: "signedOut" } : { status: "error" });
         }
@@ -39,7 +48,7 @@ export function useCurrentUser(eventId?: string): UserState {
     let subscription: { unsubscribe: () => void };
     try {
       subscription = getSupabase().auth.onAuthStateChange((_event, session) => {
-        void load(session?.access_token);
+        void load(session?.access_token, session?.user?.id);
       }).data.subscription;
     } catch (error) {
       console.error("Could not initialize authentication:", error);

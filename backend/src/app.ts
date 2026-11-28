@@ -40,8 +40,7 @@ export function createApp(
 
   if (services.auth) {
     const auth = createAuthHandlers(services.auth);
-    app.post("/api/auth/code", auth.requestCode);
-    app.post("/api/auth/verify", auth.verifyCode);
+    app.post("/api/auth/join", auth.joinEvent);
     app.post("/api/auth/login", auth.login);
     app.get("/api/auth/me", auth.me);
     app.post("/api/auth/password", auth.changePassword);

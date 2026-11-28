@@ -8,7 +8,7 @@ vi.mock("./supabase", () => ({
   getSupabase: () => ({ auth: { setSession, getSession } })
 }));
 
-import { AuthRequestError, changePassword, signIn, verifyCode } from "./auth";
+import { AuthRequestError, changePassword, joinEvent, signIn } from "./auth";
 
 afterEach(() => {
   vi.resetAllMocks();
@@ -28,12 +28,23 @@ describe("authentication client", () => {
     expect(fetch).toHaveBeenCalledWith("/api/auth/login", expect.objectContaining({ method: "POST" }));
   });
 
-  it("does not save a session when a participant code is rejected", async () => {
+  it("does not save a session when joining an event is rejected", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false, status: 401, json: async () => ({ error: "Invalid code" })
+      ok: false, status: 404, json: async () => ({ error: "Event unavailable" })
     }));
-    await expect(verifyCode(user.email, "bad", user.name, "event")).rejects.toBeInstanceOf(AuthRequestError);
+    await expect(joinEvent(user.email, user.name, "event")).rejects.toBeInstanceOf(AuthRequestError);
     expect(setSession).not.toHaveBeenCalled();
+  });
+
+  it("saves the guest session after joining with name and email", async () => {
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user, session }) });
+    vi.stubGlobal("fetch", fetch);
+    setSession.mockResolvedValue({ error: null });
+    expect(await joinEvent(user.email, user.name, "event")).toEqual(user);
+    expect(fetch).toHaveBeenCalledWith("/api/auth/join", expect.objectContaining({
+      body: JSON.stringify({ email: user.email, name: user.name, eventId: "event" })
+    }));
+    expect(setSession).toHaveBeenCalledWith({ access_token: "access", refresh_token: "refresh" });
   });
 
   it("sends the active bearer token when changing a password", async () => {

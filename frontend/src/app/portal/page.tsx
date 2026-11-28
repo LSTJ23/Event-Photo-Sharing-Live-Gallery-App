@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { changePassword, requestCode, signIn, signOut, verifyCode } from "@/lib/auth";
+import { changePassword, joinEvent, signIn, signOut } from "@/lib/auth";
 import { useCurrentUser } from "@/components/useCurrentUser";
 
 type View = "home" | "participant" | "management" | "password";
@@ -24,13 +24,11 @@ function PortalForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
-  const [codeSent, setCodeSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const current = useCurrentUser();
   const activeView = current.status === "ready" && current.user.mustChangePassword ? "password" : view;
 
-  async function joinEvent(e: React.FormEvent<HTMLFormElement>) {
+  async function enterEvent(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!eventId || eventId === "." || eventId === "..") {
       setError("This event link is invalid. Scan the event QR code again.");
@@ -39,13 +37,8 @@ function PortalForm() {
     setBusy(true);
     setError("");
     try {
-      if (!codeSent) {
-        await requestCode(email, eventId);
-        setCodeSent(true);
-      } else {
-        await verifyCode(email, code, name, eventId);
-        router.push(`/e/${encodeURIComponent(eventId)}/camera`);
-      }
+      await joinEvent(email, name, eventId);
+      router.push(`/e/${encodeURIComponent(eventId)}/camera`);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Unable to sign in. Please try again.");
     } finally {
@@ -139,25 +132,19 @@ function PortalForm() {
             <h1 className="stagger-1">Join Gallery</h1>
             {eventId ? (
               <>
-                <p className="stagger-1">{codeSent ? "Enter the verification code sent to your email." : "Enter your details to join the event."}</p>
-                <form className="form-layout stagger-2" onSubmit={joinEvent}>
+                <p className="stagger-1">Enter your details to join the event.</p>
+                <p className="stagger-1">Your email is not verified. Use the same email when you return.</p>
+                <form className="form-layout stagger-2" onSubmit={enterEvent}>
                   <div className="input-group">
                     <label htmlFor="login-name">Full Name</label>
-                    <input type="text" id="login-name" className="input-field" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} readOnly={codeSent} required />
+                    <input type="text" id="login-name" className="input-field" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required />
                   </div>
                   <div className="input-group">
                     <label htmlFor="login-email">Email Address</label>
-                    <input type="email" id="login-email" className="input-field" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} readOnly={codeSent} required />
+                    <input type="email" id="login-email" className="input-field" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
-                  {codeSent && (
-                    <div className="input-group">
-                      <label htmlFor="login-code">Verification Code</label>
-                      <input type="text" id="login-code" className="input-field" autoComplete="one-time-code" inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} required />
-                    </div>
-                  )}
                   {error && <span className="form-error" role="alert">{error}</span>}
-                  <button type="submit" className="btn-primary" disabled={busy}>{busy ? "Please wait..." : codeSent ? "Enter Event" : "Send Verification Code"}</button>
-                  {codeSent && <button type="button" className="text-link" onClick={() => { setCodeSent(false); setCode(""); setError(""); }}>Change details or resend code</button>}
+                  <button type="submit" className="btn-primary" disabled={busy}>{busy ? "Please wait..." : "Enter Event"}</button>
                 </form>
               </>
             ) : (

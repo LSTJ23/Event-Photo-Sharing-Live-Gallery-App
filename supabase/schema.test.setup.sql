@@ -3,7 +3,7 @@ create role anon nologin;
 create role authenticated nologin;
 create role service_role nologin bypassrls;
 create schema auth;
-create table auth.users (id uuid primary key);
+create table auth.users (id uuid primary key, email text);
 create schema storage;
 create table storage.buckets (
   id text primary key,
