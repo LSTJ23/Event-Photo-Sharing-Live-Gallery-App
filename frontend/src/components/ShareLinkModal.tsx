@@ -59,7 +59,7 @@ export function ShareLinkModal({
         <LinkIcon size={20} />
       </span>
       <h2 id="share-link-title" className={styles.dialogTitle}>
-        Public Share Link
+        Share Link &amp; QR Code
       </h2>
       <p className={styles.dialogText}>Anyone with this link or QR code can join the event gallery.</p>
       <QrCode value={link} size={168} className={styles.dialogQr} />

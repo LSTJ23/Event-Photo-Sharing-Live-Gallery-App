@@ -13,7 +13,12 @@ export type PhotosState =
  * Loads an event's photos (newest first) and re-checks for new ones every
  * `refreshMs`. Call `refresh()` to reload straight away (e.g. after removing one).
  */
-export function usePhotos(eventId: string, refreshMs = 5000): PhotosState & { refresh: () => void } {
+export function usePhotos(
+  eventId: string,
+  refreshMs = 5000,
+  /** Organizer and admin pages: also get photos an admin hid (marked hidden). */
+  includeHidden = false
+): PhotosState & { refresh: () => void } {
   const [state, setState] = useState<PhotosState>({ status: "loading" });
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
@@ -23,7 +28,7 @@ export function usePhotos(eventId: string, refreshMs = 5000): PhotosState & { re
     let timer: ReturnType<typeof setTimeout>;
 
     const load = () => {
-      listPhotos(eventId)
+      listPhotos(eventId, { includeHidden })
         .then((photos) => {
           if (active) setState({ status: "ready", photos });
         })
@@ -41,7 +46,7 @@ export function usePhotos(eventId: string, refreshMs = 5000): PhotosState & { re
       active = false;
       clearTimeout(timer);
     };
-  }, [eventId, refreshMs, version]);
+  }, [eventId, includeHidden, refreshMs, version]);
 
   return { ...state, refresh };
 }

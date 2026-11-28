@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { OrganizerOnly } from "@/components/OrganizerOnly";
 import { OrganizerShell } from "@/components/organizer/OrganizerShell";
 import { OrganizerStoreProvider } from "@/components/organizer/OrganizerStore";
@@ -10,7 +11,10 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
   return (
     <OrganizerOnly>
       <OrganizerStoreProvider>
-        <OrganizerShell>{children}</OrganizerShell>
+        <OrganizerShell>
+          {/* Pages read ?from= and ?photo= (useSearchParams), which needs a Suspense boundary. */}
+          <Suspense fallback={null}>{children}</Suspense>
+        </OrganizerShell>
       </OrganizerStoreProvider>
     </OrganizerOnly>
   );

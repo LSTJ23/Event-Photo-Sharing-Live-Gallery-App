@@ -6,8 +6,9 @@ import { CalendarIcon, ChartIcon, CheckIcon, ChevronRightIcon, FlagIcon, PlusCir
 import { PageHeader } from "@/components/admin/AdminShell";
 import { ReportDetails } from "@/components/admin/ReportDetails";
 import { useAdminStore } from "@/components/admin/AdminStore";
+import { withFrom } from "@/components/admin/useBackTo";
 import styles from "@/components/admin/dashboard.module.css";
-import { getStats, needsAttention, type AttentionItem } from "@/lib/adminData";
+import { needsAttention, reportStats, type AttentionItem } from "@/lib/adminData";
 
 function Shortcut({ href, icon, label, hint, light }: { href: string; icon: React.ReactNode; label: string; hint: string; light?: boolean }) {
   return (
@@ -27,7 +28,7 @@ export default function AdminHomePage() {
   // The event whose waiting reported photos are open in the popup.
   const [viewing, setViewing] = useState<string | null>(null);
   const viewingReports = reports.filter((r) => r.eventId === viewing && r.state === "waiting").sort((a, b) => b.count - a.count);
-  const stats = getStats(events, organizers);
+  const stats = reportStats(reports);
   const items = needsAttention(events, organizers, reports);
 
   const remind = (eventId: string) => {
@@ -38,7 +39,8 @@ export default function AdminHomePage() {
 
   const icon = (item: AttentionItem) => {
     const map = { reports: <FlagIcon size={18} />, nearlyFull: <ChartIcon size={18} />, noTime: <CalendarIcon size={18} />, invite: <UsersIcon size={18} /> };
-    return <span className={`${styles.todoIcon} ${item.kind === "invite" ? "" : styles.toneWarn}`}>{map[item.kind]}</span>;
+    const tone = { reports: styles.toneReport, nearlyFull: styles.toneWarn, noTime: styles.toneTime, invite: styles.toneInvite };
+    return <span className={`${styles.todoIcon} ${tone[item.kind]}`}>{map[item.kind]}</span>;
   };
 
   const actions = (item: AttentionItem) => {
@@ -56,13 +58,13 @@ export default function AdminHomePage() {
       );
     if (item.kind === "nearlyFull")
       return (
-        <Link href={`/admin/events/${item.id}/edit`} className={small}>
+        <Link href={withFrom(`/admin/events/${item.id}/edit`, "/admin")} className={small}>
           Raise capacity
         </Link>
       );
     if (item.kind === "noTime")
       return (
-        <Link href={`/admin/events/${item.id}/edit`} className={small}>
+        <Link href={withFrom(`/admin/events/${item.id}/edit`, "/admin")} className={small}>
           Set time
         </Link>
       );
@@ -109,8 +111,8 @@ export default function AdminHomePage() {
             Events
           </h2>
           <div className={styles.shortcuts}>
-            <Shortcut href="/admin/events/create" icon={<PlusCircleIcon />} label="Create Event" hint="Set it up and invite an organizer" />
-            <Shortcut href="/admin/events" icon={<StarIcon />} label="Manage Events" hint={`${events.length} events`} light />
+            <Shortcut href={withFrom("/admin/events/create", "/admin")} icon={<PlusCircleIcon />} label="Create Event" hint="Set it up and invite an organizer" />
+            <Shortcut href={withFrom("/admin/events", "/admin")} icon={<StarIcon />} label="Manage Events" hint={`${events.length} events`} light />
           </div>
         </section>
         <section className={styles.card} aria-labelledby="users-group">
@@ -118,8 +120,8 @@ export default function AdminHomePage() {
             Users
           </h2>
           <div className={styles.shortcuts}>
-            <Shortcut href="/admin/users/create" icon={<PlusCircleIcon />} label="Create User" hint="Add an event organizer" />
-            <Shortcut href="/admin/users" icon={<UsersIcon />} label="Manage Users" hint={`${organizers.length} organizers`} light />
+            <Shortcut href={withFrom("/admin/users/create", "/admin")} icon={<PlusCircleIcon />} label="Create User" hint="Add an event organizer" />
+            <Shortcut href={withFrom("/admin/users", "/admin")} icon={<UsersIcon />} label="Manage Users" hint={`${organizers.length} organizers`} light />
           </div>
         </section>
       </div>
@@ -129,22 +131,22 @@ export default function AdminHomePage() {
           <h2 id="overview-title" className={styles.cardTitle}>
             Report Logs Overview
           </h2>
-          <Link href="/admin/reports" className={`${styles.btn} ${styles.small}`}>
+          <Link href={withFrom("/admin/reports", "/admin")} className={`${styles.btn} ${styles.small}`}>
             View details <ChevronRightIcon />
           </Link>
         </div>
         <div className={styles.stats}>
           <div className={styles.stat}>
-            <div className={styles.statLabel}>Total events</div>
-            <div className={styles.statValue}>{stats.totalEvents}</div>
+            <div className={styles.statLabel}>Waiting for organizer</div>
+            <div className={styles.statValue}>{stats.waiting}</div>
           </div>
           <div className={styles.stat}>
-            <div className={styles.statLabel}>Active events</div>
-            <div className={styles.statValue}>{stats.activeEvents}</div>
+            <div className={styles.statLabel}>Kept or removed</div>
+            <div className={styles.statValue}>{stats.kept + stats.removed}</div>
           </div>
           <div className={styles.stat}>
-            <div className={styles.statLabel}>Active users</div>
-            <div className={styles.statValue}>{stats.activeUsers}</div>
+            <div className={styles.statLabel}>Reports in total</div>
+            <div className={styles.statValue}>{stats.totalReports}</div>
           </div>
         </div>
       </section>

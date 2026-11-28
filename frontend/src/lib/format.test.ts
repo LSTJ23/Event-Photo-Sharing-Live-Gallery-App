@@ -6,6 +6,10 @@ describe("formatEventDate", () => {
     expect(formatEventDate("2026-10-14")).toBe("October 14, 2026");
   });
 
+  it("can use the short month, like the admin pages", () => {
+    expect(formatEventDate("2026-10-14", true)).toBe("Oct 14, 2026");
+  });
+
   it("returns the input when it is not a date", () => {
     expect(formatEventDate("soon")).toBe("soon");
   });

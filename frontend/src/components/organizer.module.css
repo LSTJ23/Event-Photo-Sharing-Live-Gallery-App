@@ -223,6 +223,18 @@
   margin-bottom: 1.25rem;
 }
 
+.pageHeadingRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.pageHeadingText {
+  min-width: 0;
+}
+
 @media (min-width: 768px) {
   .pageHeading {
     margin-bottom: 1.75rem;
@@ -413,6 +425,120 @@
   align-items: center;
   gap: 0.2rem;
   font-weight: 600;
+}
+
+/* Clickable event cards: the title's link covers the whole card, and the
+   buttons on the card sit above it so they still work. */
+.cardClickable {
+  position: relative;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.cardClickable:hover {
+  border-color: #cfcfcf;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.06);
+}
+
+.cardLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.cardLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.cardLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.cardClickable .actions,
+.cardClickable .reportBar,
+.cardClickable .pastActions {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Past events ---------- */
+
+.segmented {
+  display: inline-flex;
+  margin-bottom: 1.25rem;
+  padding: 4px;
+  border-radius: 10px;
+  background: #ececec;
+}
+
+.segmented button,
+.segmented a {
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.segmented a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.segmented button[aria-selected="true"],
+.segmented a[aria-selected="true"] {
+  background: #fff;
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.pastActions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+
+.pastActions > * {
+  width: 100%;
+  min-width: 0;
+  padding: 0 0.6rem;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.pastDownload {
+  grid-column: 1 / -1;
+}
+
+.btnDangerOutline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding: 0 1.1rem;
+  border: 1px solid #f0c4c4;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--danger);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnDangerOutline:hover {
+  border-color: var(--danger);
+  background: #fdf3f3;
 }
 
 /* ---------- Analytics ---------- */
@@ -713,13 +839,27 @@
   background: var(--danger);
 }
 
-.resolvedPill {
+.keptPill,
+.deletedPill {
   flex: none;
   padding: 0.2rem 0.6rem;
-  border: 1px solid #e3e3e3;
   border-radius: 999px;
-  color: var(--ink-faint);
   font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* Kept: the photo stays in the gallery. */
+.keptPill {
+  border: 1px solid #c7e9d3;
+  background: #e7f6ec;
+  color: #1a7f45;
+}
+
+/* Deleted: the photo was removed from the gallery. */
+.deletedPill {
+  border: 1px solid #f3c7c3;
+  background: #fff5f4;
+  color: #b42318;
 }
 
 /* ---------- Report details ---------- */
@@ -769,10 +909,9 @@
   text-align: right;
 }
 
-.needsReview {
-  color: var(--danger);
-  font-weight: 600;
-}
+
+
+
 
 .detailActions {
   display: grid;
@@ -1100,17 +1239,30 @@
 
 .toast {
   position: fixed;
+  top: 50%;
   left: 50%;
-  bottom: calc(1.25rem + env(safe-area-inset-bottom));
   z-index: 60;
-  padding: 0.7rem 1.1rem;
-  border-radius: 999px;
-  background: var(--ink);
+  max-width: calc(100vw - 48px);
+  padding: 14px 22px;
+  border-radius: 14px;
+  background: rgb(17 17 17 / 0.92);
   color: #fff;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transform: translateX(-50%);
-  animation: rise 0.2s ease-out;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.25);
+  box-sizing: border-box;
+  pointer-events: none;
+  animation: toastIn 0.18s ease-out;
+}
+
+/* Messages pop up in the middle of the screen. */
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.94);
+  }
 }
 
 .visuallyHidden {
@@ -1139,4 +1291,588 @@
     opacity: 0;
     transform: translate(-50%, 6px);
   }
+}
+
+/* ---------- Sidebar frame (shared look with the admin dashboard) ---------- */
+
+.shellOrganizer {
+  background: var(--surface, #f7f7f7);
+}
+
+.shellOrganizer > main {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .shellOrganizer > main {
+    padding-top: 2.25rem;
+  }
+}
+
+.menuWithBadge {
+  position: relative;
+}
+
+.menuWithBadge .badge {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.2rem;
+}
+
+/* Report status on the details page: a small tag with an icon. */
+.statusTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.statusOpen {
+  background: #fff4e5;
+  color: #9a5b00;
+}
+
+.statusKept {
+  background: #e7f6ec;
+  color: #1a7f45;
+}
+
+.statusDeleted {
+  background: #fdecea;
+  color: #b42318;
+}
+
+
+/* Number beside a page title, e.g. "Events 2". */
+.titleCount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  margin-left: 0.55rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: #ececec;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  vertical-align: 0.2em;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Same look as the admin dashboard: light gray page, white cards with soft
+   borders, bold titles, rounded buttons and sentence-case status pills.
+   ========================================================================== */
+
+.shellOrganizer {
+  background: #f7f7f7;
+}
+
+.pageTitle {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 768px) {
+  .pageTitle {
+    font-size: 28px;
+  }
+}
+
+.pageSub {
+  margin-top: 4px;
+  color: #666;
+  font-size: 15px;
+}
+
+.backLink {
+  color: #444;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.card {
+  border-color: #ececec;
+  border-radius: 16px;
+  background: #fff;
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 24px;
+  }
+}
+
+.cardName {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Date and venue under a card's name. */
+.card .pageSub {
+  color: #666;
+  font-size: 13px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.statusLive {
+  background: #e7f6ec;
+  color: #1a7f45;
+}
+
+.statusUpcoming {
+  border: 0;
+  background: #f2f2f2;
+  color: #555;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.action {
+  border-color: #e3e3e3;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.action:hover {
+  border-color: #cfcfcf;
+  background: #fafafa;
+}
+
+.btn,
+.btnDark,
+.btnDanger {
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn {
+  border-color: #ddd;
+  background: #fff;
+}
+
+.titleCount {
+  background: #ececec;
+}
+
+/* Round back button beside the page title (same as the admin's). */
+.backButton {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #ececec;
+  border-radius: 999px;
+  background: #fff;
+  color: inherit;
+}
+
+.backButton:hover {
+  background: #f4f4f4;
+}
+
+.pageHeadingRow {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+.pageHeadingText {
+  flex: 1 1 auto;
+}
+
+.pageHeading {
+  margin-bottom: 20px;
+}
+
+/* Green "Active" tag (public link on). */
+.activeTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #e7f6ec;
+  color: #1a7f45;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.offTag {
+  display: inline-flex;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #f2f2f2;
+  color: #555;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Analytics (organizer): same stat cards and panels as the admin's. */
+.stat {
+  padding: 14px;
+  border-color: #ececec;
+  background: #fafafa;
+}
+
+@media (min-width: 768px) {
+  .stat {
+    padding: 18px 20px;
+  }
+}
+
+.statLabel {
+  margin: 0 0 6px;
+  color: #666;
+  font-size: 13px;
+}
+
+.statValue {
+  font-weight: 700;
+}
+
+@media (min-width: 768px) {
+  .statValue {
+    font-size: 40px;
+  }
+}
+
+.panel {
+  border-color: #ececec;
+  border-radius: 16px;
+  background: #fff;
+}
+
+@media (min-width: 768px) {
+  .panel {
+    padding: 24px;
+  }
+}
+
+.panelTitle {
+  font-size: 16px;
+}
+
+.stats {
+  margin-bottom: 20px;
+}
+
+.twoCol {
+  gap: 20px;
+}
+
+/* ---------- Reported photos (organizer): real thumbnails ---------- */
+
+.reportThumb {
+  position: relative;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.reportThumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The flag and Hidden tag are smaller on a thumbnail. */
+.reportThumb > span {
+  padding: 1px 6px;
+  font-size: 11px;
+}
+
+.reportThumb > span[class*="flag"] {
+  top: 4px;
+  right: 4px;
+}
+
+.reportThumb > span[class*="hiddenBadge"] {
+  left: 4px;
+  bottom: 4px;
+}
+
+.reportList {
+  max-width: none;
+  border-top: 0;
+  border: 1px solid #ececec;
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.reportRow {
+  padding: 0.9rem 1rem;
+}
+
+.reportList li:last-child .reportRow {
+  border-bottom: 0;
+}
+
+/* ---------- Report details (organizer) ---------- */
+
+.reportDetail {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 860px) {
+  .reportDetail {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    align-items: start;
+  }
+}
+
+/* Fills its column; the photo fits inside it (letterboxed on dark), and on
+   wide screens it matches the height of the details card beside it. */
+.reportDetailPhoto {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: min(60dvh, 520px);
+  border-radius: 16px;
+  background: #111;
+  overflow: hidden;
+}
+
+@media (min-width: 860px) {
+  .reportDetail {
+    align-items: stretch;
+  }
+
+  .reportDetailPhoto {
+    height: auto;
+    min-height: 420px;
+  }
+
+  /* Take the details card's height instead of the image's own size. */
+  .reportDetailPhoto img {
+    position: absolute;
+    inset: 0;
+  }
+}
+
+.reportDetailPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.reportDetailGone {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: #ececec;
+  color: #666;
+  font-size: 14px;
+}
+
+.dim {
+  opacity: 0.5;
+}
+
+.reportDetailBody {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid #ececec;
+  border-radius: 16px;
+  background: #fff;
+}
+
+@media (min-width: 768px) {
+  .reportDetailBody {
+    padding: 24px;
+  }
+}
+
+.reportDetailLabel {
+  margin: 0 0 8px;
+  color: #666;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.reasonChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.reasonChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fdecea;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reportEntries {
+  margin: 0;
+  padding: 0;
+  border: 1px solid #ececec;
+  border-radius: 12px;
+  list-style: none;
+}
+
+.reportEntries li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 5.5rem;
+  gap: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+
+.reportEntries li:first-child {
+  border-top: 0;
+}
+
+.reportEntries li > span:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.reportDetailActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reportDetailActions > * {
+  flex: 1 1 auto;
+  padding: 0 14px;
+}
+
+.reportDetailBody .infoList {
+  margin: 0;
+}
+
+/* Reported photo that's hidden from guests: neutral instead of alarm colours. */
+.statusHidden {
+  background: #ececec;
+  color: #333;
+}
+
+.reasonChip.reasonChipHidden {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.hiddenPill {
+  flex: none;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid #dcdcdc;
+  border-radius: 999px;
+  background: #f2f2f2;
+  color: #444;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* Keep photo: green outline and text (like Delete's red), so it reads as the "it's fine" choice. */
+.btn.keepButton {
+  border-color: #b7e2c6;
+  background: #fff;
+  color: #1a7f45;
+}
+
+.btn.keepButton:hover:not(:disabled) {
+  background: #f1faf4;
+}
+
+/* Delete on the report page: soft red, same as in the photo popup. */
+.btn.deleteButton {
+  border-color: #f3c7c3;
+  background: #fff;
+  color: #b42318;
+}
+
+.btn.deleteButton:hover:not(:disabled) {
+  background: #fff5f4;
+}
+
+/* Keep and Delete as solid buttons: green for keep, red for delete. */
+.btn.keepButton {
+  border-color: #1a7f45;
+  background: #1a7f45;
+  color: #fff;
+}
+
+.btn.keepButton:hover:not(:disabled) {
+  border-color: #156a39;
+  background: #156a39;
+}
+
+.btn.deleteButton {
+  border-color: #d92d20;
+  background: #d92d20;
+  color: #fff;
+}
+
+.btn.deleteButton:hover:not(:disabled) {
+  border-color: #b42318;
+  background: #b42318;
+}
+
+/* Keep and Delete: lighter filled buttons (tinted green and red, dark text). */
+.btn.keepButton {
+  border-color: #a6dcb9;
+  background: #d3f1de;
+  color: #146c3a;
+}
+
+.btn.keepButton:hover:not(:disabled) {
+  border-color: #86cfa0;
+  background: #c2ead0;
+}
+
+.btn.deleteButton {
+  border-color: #f5b5ae;
+  background: #fddcd8;
+  color: #a3201a;
+}
+
+.btn.deleteButton:hover:not(:disabled) {
+  border-color: #ef9a91;
+  background: #fbcac4;
 }

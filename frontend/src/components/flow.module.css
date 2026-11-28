@@ -938,3 +938,146 @@
   color: #fff;
   text-decoration: none;
 }
+
+/* ---------- Report a photo (05 Single photo) ---------- */
+
+.photoMetaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reportButton,
+.reportedTag {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 2.5rem;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.reportButton {
+  border: 1px solid #f3c7c3;
+  background: #fff5f4;
+  color: #b42318;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.reportButton:hover {
+  border-color: #e9a29b;
+  background: #fdecea;
+}
+
+.reportedTag {
+  background: #f3f3f3;
+  color: var(--ink-faint);
+}
+
+.reportDialog {
+  max-width: 400px;
+}
+
+.reportForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.reportDialog .error {
+  margin: 0;
+}
+
+.reportIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #fdecec;
+  color: #b42318;
+}
+
+.reportIconDone {
+  margin-bottom: 14px;
+  background: #e7f6ec;
+  color: #1a7f45;
+}
+
+.reportTitle {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.reportText {
+  margin: -6px 0 0;
+  color: var(--ink-faint);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.reportIconDone ~ .reportText {
+  margin: 6px 0 18px;
+}
+
+.reportField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.reportField > span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.required {
+  margin-left: 2px;
+  color: #b42318;
+}
+
+.reportField small {
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+
+.reportField select,
+.reportField textarea {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #d9d9d9;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1rem; /* 16px stops iPhones zooming in */
+  font-weight: 400;
+  box-sizing: border-box;
+}
+
+.reportField select {
+  min-height: 2.9rem;
+}
+
+.reportField textarea {
+  resize: vertical;
+}
+
+.reportActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.reportDialog > .btnPrimary {
+  width: 100%;
+}
