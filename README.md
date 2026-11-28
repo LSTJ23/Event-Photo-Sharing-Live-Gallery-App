@@ -168,8 +168,9 @@ Routes in `frontend/src/app`:
 | Route | Screen |
 | --- | --- |
 | `/portal` | Login: participants verify an email code for the selected event; organizers and admins use their staff credentials. Without an event, participants are asked to open an event link or scan its QR code. |
-| `/e/<eventId>` | The event's public share link (also what its QR code holds). Opens participant access, then the event camera; staff can switch to dashboard access. |
+| `/e/<eventId>` | The event's public share link (also what its QR code holds). Opens participant access, then the terms and event camera; staff can switch to dashboard access. |
 | `/scan` | Existing in-app QR scanner, not used by the normal access flow |
+| `/e/<eventId>/terms` | Participant terms and conditions, shown after joining and before the camera |
 | `/e/<eventId>/camera` | Camera: take a photo or choose one from the album |
 | `/e/<eventId>/preview` | 02 Photo preview |
 | `/e/<eventId>/share` | 03 Share photo (with name or anonymously), then 03b "Photo shared!" |
