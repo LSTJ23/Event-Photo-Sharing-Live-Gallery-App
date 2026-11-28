@@ -38,7 +38,7 @@ function PortalForm() {
     setError("");
     try {
       await joinEvent(email, name, eventId);
-      router.push(`/e/${encodeURIComponent(eventId)}/camera`);
+      router.push(`/e/${encodeURIComponent(eventId)}/terms`);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Unable to sign in. Please try again.");
     } finally {
@@ -133,7 +133,7 @@ function PortalForm() {
             {eventId ? (
               <>
                 <p className="stagger-1">Enter your details to join the event.</p>
-                <p className="stagger-1">Your email is not verified. Use the same email when you return.</p>
+                <p className="stagger-1">Use the same email when you return.</p>
                 <form className="form-layout stagger-2" onSubmit={enterEvent}>
                   <div className="input-group">
                     <label htmlFor="login-name">Full Name</label>

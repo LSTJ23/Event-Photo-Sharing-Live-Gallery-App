@@ -33,6 +33,7 @@ vi.mock("@/lib/auth", async (importOriginal) => ({
 import { EventSession, useEventSession } from "@/components/EventSession";
 import { ShareLinkModal } from "@/components/ShareLinkModal";
 import SharePage from "@/app/e/[eventId]/share/page";
+import TermsPage from "@/app/e/[eventId]/terms/page";
 import { getEvent, uploadPhoto } from "@/lib/api";
 import { AuthRequestError, getParticipantEvent } from "@/lib/auth";
 
@@ -64,6 +65,54 @@ describe("1.1 / 1.2 - event screens", () => {
     );
     expect(await screen.findByText("inside the event")).toBeInTheDocument();
     expect(getParticipantEvent).toHaveBeenCalledWith(EVENT.id);
+  });
+
+  describe("participant terms", () => {
+    it("requires agreement before continuing to the event camera", async () => {
+      session.path = "/e/test-event/terms";
+      const user = userEvent.setup();
+      render(
+        <EventSession eventId={EVENT.id}>
+          <TermsPage />
+        </EventSession>
+      );
+
+      expect(await screen.findByRole("heading", { name: "Terms & Conditions of Participation" })).toBeInTheDocument();
+      expect(screen.getByRole("region", { name: "Terms and Conditions Document" })).toBeInTheDocument();
+      const accept = screen.getByRole("button", { name: /Accept & Join Event/ });
+      expect(accept).toBeDisabled();
+      await user.click(screen.getByRole("checkbox"));
+      expect(accept).toBeEnabled();
+      await user.click(accept);
+      expect(router.push).toHaveBeenCalledWith("/e/test-event/camera");
+    });
+
+    it("returns to the event login without accepting", async () => {
+      session.path = "/e/test-event/terms";
+      const user = userEvent.setup();
+      render(
+        <EventSession eventId={EVENT.id}>
+          <TermsPage />
+        </EventSession>
+      );
+
+      await user.click(await screen.findByRole("button", { name: "Back to login" }));
+      expect(router.push).toHaveBeenCalledWith("/portal?event=test-event");
+      expect(router.push).not.toHaveBeenCalledWith("/e/test-event/camera");
+    });
+
+    it("does not show the agreement to a signed-out participant", () => {
+      session.path = "/e/test-event/terms";
+      session.state = { status: "signedOut" };
+      render(
+        <EventSession eventId={EVENT.id}>
+          <TermsPage />
+        </EventSession>
+      );
+
+      expect(screen.getByRole("link", { name: "Go to login" })).toHaveAttribute("href", "/portal?event=test-event");
+      expect(screen.queryByRole("heading", { name: "Terms & Conditions of Participation" })).not.toBeInTheDocument();
+    });
   });
 
   it("an event that does not exist shows 'Event not found' and no event content", async () => {

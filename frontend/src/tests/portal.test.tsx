@@ -252,7 +252,7 @@ describe("1.1 / 1.2 - a participant joins an event from its link", () => {
     expect(screen.getByRole("button", { name: "Enter Event" })).toBeInTheDocument();
   });
 
-  it("joining sends the name, email and event, then opens that event's camera", async () => {
+  it("joining sends the name, email and event, then opens that event's terms", async () => {
     vi.mocked(joinEvent).mockResolvedValue({ ...staff("organizer"), role: "participant" } as AuthUser);
     const user = userEvent.setup();
     render(<AppPortal />);
@@ -261,7 +261,7 @@ describe("1.1 / 1.2 - a participant joins an event from its link", () => {
     await user.click(screen.getByRole("button", { name: "Enter Event" }));
 
     expect(joinEvent).toHaveBeenCalledWith("pat@example.com", "Pat Guest", "test-event");
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/e/test-event/camera"));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/e/test-event/terms"));
   });
 
   it("an event that does not exist, is inactive or has ended shows the error and stays on the form", async () => {
