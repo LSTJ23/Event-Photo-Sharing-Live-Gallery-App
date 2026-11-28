@@ -16,15 +16,24 @@ let routeParams: Record<string, string> = {};
 vi.mock("next/navigation", () => ({
   useRouter: () => router,
   useParams: () => routeParams,
-  usePathname: () => "/events"
+  usePathname: () => "/events",
+  useSearchParams: () => new URLSearchParams()
+}));
+
+vi.mock("@/lib/api", () => ({
+  listPhotos: vi.fn(async () => []),
+  removePhotos: vi.fn(async () => {})
 }));
 
 import AnalyticsPage from "@/app/(organizer)/events/[id]/analytics/page";
 import EventsPage from "@/app/(organizer)/events/page";
 import ReportPage from "@/app/(organizer)/reports/[id]/page";
 import ReportsPage from "@/app/(organizer)/reports/page";
+import EditEventPage from "@/app/admin/events/[id]/edit/page";
+import { AdminStoreProvider, useAdminStore } from "@/components/admin/AdminStore";
 import { OrganizerShell } from "@/components/organizer/OrganizerShell";
 import { OrganizerStoreProvider, useOrganizerStore } from "@/components/organizer/OrganizerStore";
+import { removePhotos } from "@/lib/api";
 
 /** Shows the store's report states and photo counts, so tests can check what changed. */
 function Probe() {
@@ -46,11 +55,11 @@ function renderInStore(page: React.ReactNode) {
   );
 }
 
-/** The big number shown above a label such as "Photos" or "Participants". */
+/** The big number shown beside a label such as "Photos" or "Participants". */
 const statValue = (label: string) =>
   screen
     .getAllByText(label)
-    .map((element) => element.previousElementSibling)
+    .map((element) => element.nextElementSibling)
     .find((sibling): sibling is Element => sibling !== null) as HTMLElement;
 
 const probe = () => screen.getByTestId("probe").textContent ?? "";
@@ -66,13 +75,13 @@ describe("22.x - EO reviews reported photos", () => {
 
     expect(screen.getByRole("heading", { name: "Reported photos" })).toBeInTheDocument();
     expect(screen.getByText("Inappropriate content")).toBeInTheDocument();
-    expect(screen.getByText("Spam content")).toBeInTheDocument();
-    expect(screen.getAllByLabelText("Unread")).toHaveLength(2);
+    expect(screen.getByText("Not from this event")).toBeInTheDocument();
+    expect(screen.getAllByLabelText("Unread")).toHaveLength(3);
   });
 
   it("the menu shows the unread count", () => {
     renderInStore(<ReportsPage />);
-    expect(screen.getAllByLabelText("2 new").length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText("3 new").length).toBeGreaterThan(0);
   });
 
   it("opening a report marks it as read and lowers the unread count", async () => {
@@ -83,16 +92,16 @@ describe("22.x - EO reviews reported photos", () => {
 
     expect(probe()).toContain("report1:open:read");
     expect(probe()).toContain("report2:open:unread");
-    expect(screen.getAllByLabelText("Unread")).toHaveLength(1);
-    expect(screen.getAllByLabelText("1 new").length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText("Unread")).toHaveLength(2);
+    expect(screen.getAllByLabelText("2 new").length).toBeGreaterThan(0);
   });
 
   it("the report page shows the reason, reporter, event and 'Needs review' status", () => {
     routeParams = { id: "1" };
     renderInStore(<ReportPage />);
 
-    expect(screen.getByText("Inappropriate content")).toBeInTheDocument();
-    expect(screen.getByText("Participant 14")).toBeInTheDocument();
+    expect(screen.getAllByText("Inappropriate content").length).toBeGreaterThan(0);
+    expect(screen.getByText("Participant 12")).toBeInTheDocument();
     expect(screen.getByText("DLSU CSO Event")).toBeInTheDocument();
     expect(screen.getByText("Needs review")).toBeInTheDocument();
   });
@@ -103,11 +112,12 @@ describe("22.x - EO reviews reported photos", () => {
     renderInStore(<ReportPage />);
     expect(probe()).toContain("dlsu-cso-event:48");
 
+    await user.click(screen.getByRole("button", { name: "Keep" }));
     await user.click(screen.getByRole("button", { name: "Keep photo" }));
 
-    expect(probe()).toContain("report1:resolved");
+    expect(probe()).toContain("report1:kept");
     expect(probe()).toContain("dlsu-cso-event:48"); // photo still there
-    expect(router.push).toHaveBeenCalledWith("/reports");
+    expect(router.push).not.toHaveBeenCalled();
     expect(screen.getByRole("status")).toHaveTextContent("Photo kept");
   });
 
@@ -116,14 +126,14 @@ describe("22.x - EO reviews reported photos", () => {
     routeParams = { id: "1" };
     renderInStore(<ReportPage />);
 
-    await user.click(screen.getByRole("button", { name: "Delete photo" }));
+    await user.click(screen.getByRole("button", { name: "Delete" }));
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("Remove this photo?")).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "Remove" }));
 
-    expect(probe()).toContain("report1:resolved");
-    expect(probe()).toContain("dlsu-cso-event:47"); // one photo gone
+    expect(probe()).toContain("report1:deleted");
+    expect(removePhotos).toHaveBeenCalledWith("dlsu-cso-event", ["sample-9"]);
     expect(screen.getByRole("status")).toHaveTextContent("Photo deleted");
   });
 
@@ -132,23 +142,24 @@ describe("22.x - EO reviews reported photos", () => {
     routeParams = { id: "1" };
     renderInStore(<ReportPage />);
 
-    await user.click(screen.getByRole("button", { name: "Delete photo" }));
+    await user.click(screen.getByRole("button", { name: "Delete" }));
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
     expect(probe()).toContain("report1:open");
     expect(probe()).toContain("dlsu-cso-event:48");
   });
 
-  it("a resolved report is labelled 'Resolved' and has no Delete or Keep buttons", async () => {
+  it("a kept report is labelled 'Kept' and no longer has a Keep button", async () => {
     const user = userEvent.setup();
     routeParams = { id: "1" };
     const { unmount } = renderInStore(<ReportPage />);
+    await user.click(screen.getByRole("button", { name: "Keep" }));
     await user.click(screen.getByRole("button", { name: "Keep photo" }));
 
     // The store is in memory, so look at the same store without unmounting it.
-    expect(screen.getByText("Resolved")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Keep photo" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Delete photo" })).not.toBeInTheDocument();
+    expect(screen.getByText("Kept")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Keep" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
     unmount();
   });
 
@@ -164,11 +175,11 @@ describe("21.x - EO events list", () => {
     renderInStore(<EventsPage />);
 
     const live = screen.getByRole("region", { name: "DLSU CSO Event" });
-    expect(within(live).getByText("LIVE")).toBeInTheDocument();
+    expect(within(live).getByText("Live")).toBeInTheDocument();
     expect(within(live).getByText(/Oct 14, 2026 · Manila/)).toBeInTheDocument();
 
     const upcoming = screen.getByRole("region", { name: "Event 2" });
-    expect(within(upcoming).getByText("UPCOMING")).toBeInTheDocument();
+    expect(within(upcoming).getByText("Upcoming")).toBeInTheDocument();
     expect(within(upcoming).getByText(/Dec 3, 2026 · TBD/)).toBeInTheDocument();
   });
 
@@ -181,11 +192,11 @@ describe("21.x - EO events list", () => {
     expect(within(card).getByRole("link", { name: /QR code/ })).toHaveAttribute("href", "/events/event-2/qr");
   });
 
-  it("a card with pending reports shows '2 reported photos' and a Review link", () => {
+  it("a card with pending reports shows '3 reported photos' and a Review link", () => {
     renderInStore(<EventsPage />);
     const card = screen.getByRole("region", { name: "DLSU CSO Event" });
 
-    expect(within(card).getByText(/2 reported photos/)).toBeInTheDocument();
+    expect(within(card).getByText(/3 reported photos/)).toBeInTheDocument();
     expect(within(card).getByRole("link", { name: /Review/ })).toHaveAttribute("href", "/reports");
   });
 
@@ -230,40 +241,56 @@ describe("21.2 / 21.3 - EO views event analytics", () => {
 });
 
 describe("24.8 - photo capacity validation", () => {
+  function CapacityProbe() {
+    const { getEvent } = useAdminStore();
+    return <span data-testid="capacity">{getEvent("dlsu-cso-event")?.capacity}</span>;
+  }
+
   async function saveLimit(value: string) {
     const user = userEvent.setup();
     routeParams = { id: "dlsu-cso-event" };
-    renderInStore(<AnalyticsPage />);
-    const input = screen.getByRole("spinbutton", { name: "Photo limit" }) as HTMLInputElement;
+    render(
+      <AdminStoreProvider>
+        <EditEventPage />
+        <CapacityProbe />
+      </AdminStoreProvider>
+    );
+    const input = screen.getByRole("spinbutton", { name: "Photo capacity" }) as HTMLInputElement;
     await user.clear(input);
     if (value) await user.type(input, value);
-    await user.click(screen.getByRole("button", { name: "Save limit" }));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
     return input;
   }
 
-  // 0, negative numbers and decimals are stopped by the browser's own form
-  // validation (the input has min=1 and whole-number steps), so the form is
-  // never submitted and the old limit stays.
-  it.each(["0", "-5", "1.5"])("does not save %j (the browser blocks it)", async (value) => {
+  it.each(["0", "-5", "1.5"])("does not save %j", async (value) => {
     const input = await saveLimit(value);
 
-    expect(input.checkValidity()).toBe(false);
-    expect(screen.queryByRole("status")).not.toBeInTheDocument(); // no "Limit saved"
-    expect(screen.getByText(/48 of 200 photos used/)).toBeInTheDocument();
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Enter a whole number of photos.")).toBeInTheDocument();
+    expect(screen.getByTestId("capacity")).toHaveTextContent("200");
+    expect(router.push).not.toHaveBeenCalled();
   });
 
-  // An empty field passes the browser check, so the page's own check shows the message.
   it("rejects an empty value with the page's own message and keeps the old limit", async () => {
     await saveLimit("");
 
-    expect(screen.getByRole("status")).toHaveTextContent("Enter a limit of 1 or more");
-    expect(screen.getByText(/48 of 200 photos used/)).toBeInTheDocument();
+    expect(screen.getByText("Enter a whole number of photos.")).toBeInTheDocument();
+    expect(screen.getByTestId("capacity")).toHaveTextContent("200");
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it("rejects a limit below the number of photos already shared", async () => {
+    await saveLimit("47");
+
+    expect(screen.getByText("Can't be lower than the 48 photos already shared.")).toBeInTheDocument();
+    expect(screen.getByTestId("capacity")).toHaveTextContent("200");
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   it("accepts a valid whole number and saves it", async () => {
     await saveLimit("500");
 
-    expect(screen.getByRole("status")).toHaveTextContent("Limit saved");
-    expect(screen.getByText(/48 of 500 photos used/)).toBeInTheDocument();
+    expect(screen.getByTestId("capacity")).toHaveTextContent("500");
+    expect(router.push).toHaveBeenCalledWith("/admin/events");
   });
 });

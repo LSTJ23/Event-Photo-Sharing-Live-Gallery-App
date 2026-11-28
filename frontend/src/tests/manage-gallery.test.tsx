@@ -14,7 +14,10 @@ vi.mock("@/components/useCurrentUser", () => ({
     user: { id: "eo-1", name: "Eli Organizer", email: "eo@example.com", role: "organizer", mustChangePassword: false }
   })
 }));
-vi.mock("next/navigation", () => ({ usePathname: () => "/events/test-event/gallery/manage" }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/events/test-event/gallery/manage",
+  useSearchParams: () => new URLSearchParams()
+}));
 
 const EVENT = { id: "test-event", name: "Test Event", date: "2026-10-14", location: "Manila", shareLinkActive: true };
 
@@ -35,6 +38,8 @@ vi.mock("@/lib/api", () => ({
 }));
 
 import { EventSession } from "@/components/EventSession";
+import { OrganizerStoreProvider } from "@/components/organizer/OrganizerStore";
+import OrganizerGalleryPage from "@/app/(organizer)/events/[id]/gallery/page";
 import ManageGalleryPage from "@/app/(organizer)/events/[id]/gallery/manage/page";
 import { removePhotos } from "@/lib/api";
 
@@ -47,19 +52,25 @@ const makePhotos = (n: number): Photo[] =>
     createdAt: new Date(Date.UTC(2026, 9, 14, 12, i)).toISOString()
   }));
 
-async function openManagePage(photoCount: number) {
+async function openManagePage(photoCount: number, single = false) {
   photoStore = makePhotos(photoCount);
   render(
-    <EventSession eventId={EVENT.id} variant="admin">
-      <ManageGalleryPage />
-    </EventSession>
+    <OrganizerStoreProvider>
+      <EventSession eventId={EVENT.id} variant="admin">
+        {single ? <OrganizerGalleryPage /> : <ManageGalleryPage />}
+      </EventSession>
+    </OrganizerStoreProvider>
   );
-  // Wait for the photos to load (the count row reads "N photos").
-  await screen.findByText(`${photoCount} photos`);
+  if (single) await screen.findByRole("button", { name: "Open photo shared by Guest 1" });
+  else await screen.findByText(`${photoCount} photos`);
 }
 
-const trashButton = (n: number) => screen.getByRole("button", { name: `Remove photo shared by Guest ${n}` });
+const openButton = (n: number) => screen.getByRole("button", { name: `Open photo shared by Guest ${n}` });
 const selectButton = (n: number) => screen.getByRole("button", { name: `Select photo shared by Guest ${n}` });
+async function askToRemove(user: ReturnType<typeof userEvent.setup>, n: number) {
+  await user.click(openButton(n));
+  await user.click(screen.getByRole("button", { name: "Delete" }));
+}
 
 beforeEach(() => {
   failNextRemoval = false;
@@ -67,16 +78,16 @@ beforeEach(() => {
 });
 
 describe("17.3 / 17.4 / 17.5 - EO removes a single photo", () => {
-  it("every photo has a trash button", async () => {
-    await openManagePage(3);
-    expect(screen.getAllByRole("button", { name: /^Remove photo shared by/ })).toHaveLength(3);
+  it("every photo can be opened", async () => {
+    await openManagePage(3, true);
+    expect(screen.getAllByRole("button", { name: /^Open photo shared by/ })).toHaveLength(3);
   });
 
   it("asks for confirmation with the can't-be-undone warning", async () => {
     const user = userEvent.setup();
-    await openManagePage(3);
+    await openManagePage(3, true);
 
-    await user.click(trashButton(1));
+    await askToRemove(user, 1);
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("Remove this photo?")).toBeInTheDocument();
@@ -85,63 +96,63 @@ describe("17.3 / 17.4 / 17.5 - EO removes a single photo", () => {
 
   it("Cancel removes nothing and the count stays the same", async () => {
     const user = userEvent.setup();
-    await openManagePage(3);
+    await openManagePage(3, true);
 
-    await user.click(trashButton(1));
+    await askToRemove(user, 1);
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByText("Remove this photo?")).not.toBeInTheDocument();
     expect(removePhotos).not.toHaveBeenCalled();
-    expect(screen.getByText("3 photos")).toBeInTheDocument();
+    expect(screen.getByText(/3 photos/)).toBeInTheDocument();
   });
 
   it("Remove deletes only that photo and the count goes down by one", async () => {
     const user = userEvent.setup();
-    await openManagePage(3);
+    await openManagePage(3, true);
 
-    await user.click(trashButton(2));
+    await askToRemove(user, 2);
     await user.click(screen.getByRole("button", { name: "Remove" }));
 
-    await screen.findByText("2 photos");
+    await screen.findByText(/2 photos/);
     expect(removePhotos).toHaveBeenCalledWith(EVENT.id, ["p2"]);
-    expect(screen.queryByRole("button", { name: "Remove photo shared by Guest 2" })).not.toBeInTheDocument();
-    expect(trashButton(1)).toBeInTheDocument();
-    expect(trashButton(3)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open photo shared by Guest 2" })).not.toBeInTheDocument();
+    expect(openButton(1)).toBeInTheDocument();
+    expect(openButton(3)).toBeInTheDocument();
     // 17.5: the "server" no longer returns it, so the participant gallery can't show it either.
     expect(photoStore.map((photo) => photo.id)).toEqual(["p1", "p3"]);
   });
 
   it("shows an error and 'Try Again' when removal fails, then succeeds on retry", async () => {
     const user = userEvent.setup();
-    await openManagePage(3);
+    await openManagePage(3, true);
     failNextRemoval = true;
 
-    await user.click(trashButton(1));
+    await askToRemove(user, 1);
     await user.click(screen.getByRole("button", { name: "Remove" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/Couldn't remove the photo/);
     expect(screen.getByRole("button", { name: "Try Again" })).toBeInTheDocument();
-    expect(screen.getByText("3 photos")).toBeInTheDocument();
+    expect(screen.getByText(/3 photos/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Try Again" }));
-    await screen.findByText("2 photos");
+    await screen.findByText(/2 photos/);
   });
 
   it("disables both buttons and shows 'Removing…' while the request is running", async () => {
     const user = userEvent.setup();
-    await openManagePage(3);
+    await openManagePage(3, true);
     let finish!: () => void;
     vi.mocked(removePhotos).mockImplementationOnce(
       () => new Promise<void>((resolve) => (finish = resolve))
     );
 
-    await user.click(trashButton(1));
+    await askToRemove(user, 1);
     await user.click(screen.getByRole("button", { name: "Remove" }));
 
     expect(screen.getByRole("button", { name: "Removing…" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
     finish();
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText("Remove this photo?")).not.toBeInTheDocument());
   });
 });
 
@@ -152,11 +163,11 @@ describe("18.6 / 18.7 - EO removes multiple photos", () => {
     expect(screen.queryByRole("button", { name: /^Delete \d/ })).not.toBeInTheDocument();
 
     await user.click(selectButton(1));
-    expect(screen.getByRole("button", { name: /Delete 1 Photo$/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete 1" })).toBeInTheDocument();
 
     await user.click(selectButton(2));
     await user.click(selectButton(3));
-    expect(screen.getByRole("button", { name: /Delete 3 Photos$/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete 3" })).toBeInTheDocument();
     expect(screen.getByText("3 selected")).toBeInTheDocument();
     expect(selectButton(1)).toHaveAttribute("aria-pressed", "true");
   });
@@ -190,7 +201,7 @@ describe("18.6 / 18.7 - EO removes multiple photos", () => {
     await openManagePage(6);
     for (const n of [1, 2, 3]) await user.click(selectButton(n));
 
-    await user.click(screen.getByRole("button", { name: /Delete 3 Photos$/ }));
+    await user.click(screen.getByRole("button", { name: "Delete 3" }));
     expect(screen.getByText("Remove 3 photos?")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
@@ -204,7 +215,7 @@ describe("18.6 / 18.7 - EO removes multiple photos", () => {
     await openManagePage(6);
     for (const n of [1, 2, 3]) await user.click(selectButton(n));
 
-    await user.click(screen.getByRole("button", { name: /Delete 3 Photos$/ }));
+    await user.click(screen.getByRole("button", { name: "Delete 3" }));
     await user.click(screen.getByRole("button", { name: "Remove" }));
 
     await screen.findByText("3 photos");
@@ -222,7 +233,7 @@ describe("18.6 / 18.7 - EO removes multiple photos", () => {
     await user.click(selectButton(1));
     await user.click(selectButton(2));
 
-    await user.click(screen.getByRole("button", { name: /Delete 2 Photos$/ }));
+    await user.click(screen.getByRole("button", { name: "Delete 2" }));
     await user.click(screen.getByRole("button", { name: "Remove" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/Couldn't remove the photos/);
