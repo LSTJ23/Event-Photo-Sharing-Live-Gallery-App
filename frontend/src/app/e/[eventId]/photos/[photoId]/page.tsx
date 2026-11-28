@@ -3,8 +3,10 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useEventSession } from "@/components/EventSession";
+import { FlagIcon } from "@/components/icons";
+import { ReportPhotoDialog } from "@/components/ReportPhotoDialog";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { usePhotos } from "@/components/usePhotos";
 import styles from "@/components/flow.module.css";
@@ -17,6 +19,9 @@ export default function PhotoPage() {
   const photos = usePhotos(event.id, 0);
   const galleryHref = `/e/${event.id}/gallery`;
   const touchStartX = useRef<number | null>(null);
+  const [reporting, setReporting] = useState(false);
+  // Photos reported from this screen, so the button says "Reported".
+  const [reported, setReported] = useState<Set<string>>(new Set());
 
   const list = useMemo(() => (photos.status === "ready" ? photos.photos : []), [photos]);
   const index = list.findIndex((photo) => photo.id === photoId);
@@ -35,11 +40,12 @@ export default function PhotoPage() {
     const onKey = (key: KeyboardEvent) => {
       if (key.key === "ArrowLeft") go(-1);
       if (key.key === "ArrowRight") go(1);
+      if (reporting) return;
       if (key.key === "Escape") router.push(galleryHref);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [go, router, galleryHref]);
+  }, [go, router, galleryHref, reporting]);
 
   const close = (
     <Link href={galleryHref} className={styles.iconBtn} aria-label="Close">
@@ -79,10 +85,29 @@ export default function PhotoPage() {
           >
             <img src={photo.url} alt={`Photo shared by ${photo.sharedBy}`} draggable={false} />
           </div>
-          <div className={styles.photoMeta}>
-            <p>Shared by {photo.sharedBy}</p>
-            <p>{formatPhotoTimestamp(photo.createdAt)}</p>
+          <div className={`${styles.photoMeta} ${styles.photoMetaRow}`}>
+            <div>
+              <p>Shared by {photo.sharedBy}</p>
+              <p>{formatPhotoTimestamp(photo.createdAt)}</p>
+            </div>
+            {reported.has(photo.id) ? (
+              <span className={styles.reportedTag}>
+                <FlagIcon size={15} /> Reported
+              </span>
+            ) : (
+              <button type="button" className={styles.reportButton} onClick={() => setReporting(true)}>
+                <FlagIcon size={15} /> Report
+              </button>
+            )}
           </div>
+          {reporting && (
+            <ReportPhotoDialog
+              eventId={event.id}
+              photoId={photo.id}
+              onReported={() => setReported((s) => new Set(s).add(photo.id))}
+              onClose={() => setReporting(false)}
+            />
+          )}
         </>
       )}
     </main>

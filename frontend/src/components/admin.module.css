@@ -93,6 +93,37 @@
   gap: 0.6rem;
 }
 
+/* Display gallery, Manage photos and Share link, under the event name. On a
+   phone Display gallery takes the full row; the other two share the next. */
+.galleryActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 1.25rem 0 1.5rem;
+}
+
+.galleryActions > * {
+  width: 100%;
+  min-width: 0;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.displayButton {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 641px) {
+  .galleryActions {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .galleryActions > * {
+    width: auto;
+  }
+}
+
 .eventTitleRow {
   display: flex;
   align-items: flex-start;
@@ -221,13 +252,10 @@
   font-weight: 600;
 }
 
-/* Fills the window's height so "Back to Gallery" sits near the bottom, as in
-   the design, while the photos column can grow (and the page scroll) past it. */
 .manageLayout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 4rem;
-  min-height: calc(100dvh - 70px - 8.5rem);
   margin-top: 2.5rem;
   padding-bottom: 3rem;
 }
@@ -343,11 +371,6 @@
 
 .qrRowText .muted {
   margin: 0 0 0.5rem;
-}
-
-.manageInfo .backButton {
-  margin-top: auto;
-  padding-top: 3rem;
 }
 
 .manageGrid {
@@ -594,11 +617,6 @@
     gap: 2.5rem;
     min-height: 0;
   }
-
-  /* The "‹ Event Gallery" link at the top does the same job on one column. */
-  .manageInfo .backButton {
-    display: none;
-  }
 }
 
 @media (max-width: 640px) {
@@ -655,4 +673,334 @@
     top: 0.35rem;
     left: 0.35rem;
   }
+}
+
+/* ---------- Photo popup (organizer gallery) ---------- */
+
+.tileButton {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.tileButton:hover img {
+  opacity: 0.88;
+}
+
+.tileButton:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
+}
+
+.viewer.viewer {
+  width: min(960px, 100%);
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  align-items: stretch;
+}
+
+.viewerStage {
+  position: relative;
+  display: flex;
+  height: min(70dvh, 640px);
+  background: #0f0f0f;
+  overflow: hidden;
+}
+
+.viewerStage img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.viewerNav,
+.viewerClose {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.9);
+  color: #111;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+}
+
+.viewerNav:hover,
+.viewerClose:hover {
+  background: #fff;
+}
+
+.viewerNav {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.viewerPrev {
+  left: 12px;
+}
+
+.viewerNext {
+  right: 12px;
+}
+
+.viewerClose {
+  top: 12px;
+  right: 12px;
+}
+
+.viewerInfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  padding: 16px 20px 18px;
+}
+
+.viewerText {
+  min-width: 0;
+}
+
+.viewerTitle {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.viewerText p {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.viewerText .viewerError {
+  color: #b42318;
+}
+
+@media (max-width: 640px) {
+  .viewerStage {
+    height: 58dvh;
+  }
+
+  .viewerActions {
+    width: 100%;
+  }
+
+  .viewerActions .btn {
+    flex: 1;
+  }
+}
+
+/* ==========================================================================
+   Same look as the admin dashboard (organizer gallery pages and the dialogs).
+   ========================================================================== */
+
+.btn,
+.btnDark,
+.iconButton {
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn,
+.iconButton {
+  border-color: #ddd;
+  background: #fff;
+}
+
+.btn:hover:not(:disabled),
+.iconButton:hover:not(:disabled) {
+  background: #f4f4f4;
+}
+
+.backLink {
+  color: #444;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.eventName {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 768px) {
+  .eventName {
+    font-size: 28px;
+  }
+}
+
+.eventMeta {
+  color: #666;
+  font-size: 15px;
+}
+
+.eventTitleRow svg {
+  margin-top: 0.45rem;
+}
+
+.tile {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.viewerActions {
+  display: flex;
+  gap: 8px;
+}
+
+.viewerDelete.viewerDelete {
+  border-color: #f3c7c3;
+  color: #b42318;
+}
+
+.viewerDelete.viewerDelete:hover:not(:disabled) {
+  background: #fff5f4;
+}
+
+/* Even spacing on the organizer gallery: title, buttons, photos 20px apart. */
+.galleryActions {
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+.grid {
+  margin-top: 0;
+}
+
+.manageDownload {
+  width: 100%;
+  margin-top: 1.25rem;
+}
+
+.selectionActions {
+  flex-wrap: wrap;
+}
+
+/* Manage photos: white cards like the admin dashboard, and a bar for the selection. */
+.manageCard {
+  padding: 20px;
+  border: 1px solid #ececec;
+  border-radius: 16px;
+  background: #fff;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .manageCard {
+    padding: 24px;
+  }
+}
+
+.manageLayout {
+  gap: 20px;
+  align-items: start;
+  margin-top: 0;
+}
+
+@media (min-width: 901px) {
+  .manageLayout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  }
+}
+
+.manageTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.manageBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  margin-bottom: 14px;
+  padding: 8px 10px 8px 14px;
+  border: 1px solid #ececec;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.manageBar > span {
+  flex: 1 1 140px;
+  color: #666;
+}
+
+.manageBar .btn,
+.manageBar .btnDanger {
+  height: 38px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* Keep photo: green outline and text (like Delete's red), so it reads as the "it's fine" choice. */
+.btn.keepButton {
+  border-color: #b7e2c6;
+  background: #fff;
+  color: #1a7f45;
+}
+
+.btn.keepButton:hover:not(:disabled) {
+  background: #f1faf4;
+}
+
+/* Keep and Delete as solid buttons: green for keep, red for delete. */
+.btn.keepButton {
+  border-color: #1a7f45;
+  background: #1a7f45;
+  color: #fff;
+}
+
+.btn.keepButton:hover:not(:disabled) {
+  border-color: #156a39;
+  background: #156a39;
+}
+
+.viewerDelete.viewerDelete {
+  border-color: #d92d20;
+  background: #d92d20;
+  color: #fff;
+}
+
+.viewerDelete.viewerDelete:hover:not(:disabled) {
+  border-color: #b42318;
+  background: #b42318;
+}
+
+/* Keep and Delete: lighter filled buttons (tinted green and red, dark text). */
+.btn.keepButton {
+  border-color: #a6dcb9;
+  background: #d3f1de;
+  color: #146c3a;
+}
+
+.btn.keepButton:hover:not(:disabled) {
+  border-color: #86cfa0;
+  background: #c2ead0;
+}
+
+.viewerDelete.viewerDelete {
+  border-color: #f5b5ae;
+  background: #fddcd8;
+  color: #a3201a;
+}
+
+.viewerDelete.viewerDelete:hover:not(:disabled) {
+  border-color: #ef9a91;
+  background: #fbcac4;
 }

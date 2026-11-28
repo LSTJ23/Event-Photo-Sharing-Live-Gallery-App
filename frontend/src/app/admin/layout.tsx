@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminOnly } from "@/components/OrganizerOnly";
 
@@ -6,7 +7,10 @@ import { AdminOnly } from "@/components/OrganizerOnly";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminOnly>
-      <AdminShell>{children}</AdminShell>
+      <AdminShell>
+        {/* Pages read ?from= (useSearchParams), which needs a Suspense boundary. */}
+        <Suspense fallback={null}>{children}</Suspense>
+      </AdminShell>
     </AdminOnly>
   );
 }

@@ -19,9 +19,13 @@ interface OrganizerStore {
   pendingCount: (eventId?: string) => number;
   unreadCount: number;
   markRead: (reportId: number) => void;
-  deletePhoto: (eventId: string, photoId: number) => void;
+  /** After a photo is deleted from the gallery: its reports are marked Deleted. */
+  photoDeleted: (eventId: string, galleryPhotoId: string) => void;
   keepReport: (reportId: number) => void;
-  setCapacity: (eventId: string, capacity: number) => void;
+  /** Past events: tuck away, bring back, or delete for good. */
+  archiveEvent: (eventId: string) => void;
+  restoreEvent: (eventId: string) => void;
+  deleteEvent: (eventId: string) => void;
 }
 
 const Context = createContext<OrganizerStore | null>(null);
@@ -62,22 +66,29 @@ export function OrganizerStoreProvider({ children }: { children: React.ReactNode
       pendingCount: (eventId) => reports.filter((r) => r.state === "open" && (!eventId || r.eventId === eventId)).length,
       unreadCount: reports.filter((r) => r.unread && r.state === "open").length,
       markRead,
-      deletePhoto: (eventId, photoId) => {
-        setEvents((all) =>
-          all.map((e) => (e.id === eventId ? { ...e, photos: e.photos.filter((p) => p.id !== photoId) } : e))
-        );
+      photoDeleted: (eventId, galleryPhotoId) => {
         setReports((all) =>
-          all.map((r) => (r.eventId === eventId && r.photoId === photoId ? { ...r, state: "resolved" } : r))
+          all.map((r) => (r.eventId === eventId && r.galleryPhotoId === galleryPhotoId ? { ...r, state: "deleted", unread: false } : r))
         );
         notify("Photo deleted");
       },
       keepReport: (reportId) => {
-        setReports((all) => all.map((r) => (r.id === reportId ? { ...r, state: "resolved", unread: false } : r)));
+        setReports((all) => all.map((r) => (r.id === reportId ? { ...r, state: "kept", unread: false } : r)));
         notify("Photo kept");
       },
-      setCapacity: (eventId, capacity) => {
-        setEvents((all) => all.map((e) => (e.id === eventId ? { ...e, capacity } : e)));
-        notify("Limit saved");
+      // TODO (backend): archive, restore and delete need API calls.
+      archiveEvent: (eventId) => {
+        setEvents((all) => all.map((e) => (e.id === eventId ? { ...e, archived: true } : e)));
+        notify("Event archived");
+      },
+      restoreEvent: (eventId) => {
+        setEvents((all) => all.map((e) => (e.id === eventId ? { ...e, archived: false } : e)));
+        notify("Event restored to Past events");
+      },
+      deleteEvent: (eventId) => {
+        setEvents((all) => all.filter((e) => e.id !== eventId));
+        setReports((all) => all.filter((r) => r.eventId !== eventId));
+        notify("Event deleted");
       }
     }),
     [events, reports, toast, notify, markRead]

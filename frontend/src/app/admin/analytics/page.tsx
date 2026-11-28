@@ -1,167 +1,194 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { ChevronRightIcon, CloseIcon } from "@/components/icons";
-import { Modal } from "@/components/Modal";
-import { initials, PageHeader } from "@/components/admin/AdminShell";
+import { PageHeader } from "@/components/admin/AdminShell";
 import { useAdminStore } from "@/components/admin/AdminStore";
 import styles from "@/components/admin/dashboard.module.css";
-import { formatWhen, topOrganizers, type TopOrganizer } from "@/lib/adminData";
+import { eventGroup, formatWhen, summarize, topEvents, type AdminEvent, type EventGroup } from "@/lib/adminData";
 
-/** Analytics: the most active organizers, and how full each event's gallery is (bar = share of its photo capacity). */
+type SortKey = "date" | "participants" | "photoCount";
+type Filter = "all" | EventGroup;
+
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: "all", label: "All events" },
+  { key: "live", label: "Live" },
+  { key: "upcoming", label: "Upcoming" },
+  { key: "past", label: "Past" },
+  { key: "archived", label: "Archived" }
+];
+
+const GROUP_LABEL: Record<EventGroup, string> = { live: "Live", upcoming: "Upcoming", past: "Past", archived: "Archived" };
+
+/**
+ * Analytics for the whole app. Pick which events to look at (all, live,
+ * upcoming, past or archived); the totals, the top events by participants and
+ * by pictures, and the per-event table all follow that choice. The table sorts
+ * by date (default), most participants or most pictures.
+ */
 export default function AnalyticsPage() {
-  const { events, organizers } = useAdminStore();
-  const [openOrg, setOpenOrg] = useState<TopOrganizer | null>(null);
-  const top = topOrganizers(events, organizers);
-  const totalPhotos = events.reduce((n, e) => n + e.photoCount, 0);
-  const byPhotos = [...events].sort((a, b) => b.photoCount - a.photoCount);
+  const { events: allEvents, getOrganizer } = useAdminStore();
+  const [filter, setFilter] = useState<Filter>("all");
+  const count = (f: Filter) => (f === "all" ? allEvents.length : allEvents.filter((e) => eventGroup(e) === f).length);
+  const events = filter === "all" ? allEvents : allEvents.filter((e) => eventGroup(e) === filter);
+  const total = summarize(events);
+  const byParticipants = topEvents(events, "participants");
+  const byPhotos = topEvents(events, "photoCount");
+  const [sort, setSort] = useState<SortKey>("date");
+  const perEvent = [...events].sort((a, b) =>
+    sort === "date" ? b.date.localeCompare(a.date) : b[sort] - a[sort] || b.date.localeCompare(a.date)
+  );
+  const header = (key: SortKey, label: string, num = false) => (
+    <th scope="col" className={num ? styles.num : undefined} aria-sort={sort === key ? "descending" : "none"}>
+      <button type="button" className={`${styles.sortButton} ${sort === key ? styles.sortActive : ""}`} onClick={() => setSort(key)}>
+        {label}
+        <span aria-hidden="true">{sort === key ? "▼" : ""}</span>
+      </button>
+    </th>
+  );
 
   return (
     <>
       <PageHeader title="Analytics" />
 
-      <div className={styles.stats}>
+      <div className={styles.tabs} role="tablist" aria-label="Which events">
+        {FILTERS.map((f) => (
+          <button key={f.key} type="button" role="tab" aria-selected={filter === f.key} onClick={() => setFilter(f.key)}>
+            {f.label} · {count(f.key)}
+          </button>
+        ))}
+      </div>
+
+      <div className={`${styles.stats} ${styles.stats4}`}>
         <div className={styles.stat}>
-          <div className={styles.statLabel}>Photos shared</div>
-          <div className={styles.statValue}>{totalPhotos}</div>
+          <div className={styles.statLabel}>Events</div>
+          <div className={styles.statValue}>{total.events}</div>
         </div>
         <div className={styles.stat}>
-          <div className={styles.statLabel}>Organizers with events</div>
-          <div className={styles.statValue}>{top.length}</div>
+          <div className={styles.statLabel}>Participants</div>
+          <div className={styles.statValue}>{total.participants}</div>
         </div>
         <div className={styles.stat}>
-          <div className={styles.statLabel}>Photos per event</div>
-          <div className={styles.statValue}>{events.length ? Math.round(totalPhotos / events.length) : 0}</div>
+          <div className={styles.statLabel}>Pictures uploaded</div>
+          <div className={styles.statValue}>{total.photos}</div>
+        </div>
+        <div className={styles.stat}>
+          <div className={styles.statLabel}>Pictures per event</div>
+          <div className={styles.statValue}>{total.photosPerEvent}</div>
         </div>
       </div>
 
       <div className={styles.panels}>
-        <section className={styles.card} aria-labelledby="top-title">
-          <div className={styles.cardHead}>
-            <h2 id="top-title" className={styles.cardTitle}>
-              Top Organizers
-            </h2>
-            <span className={styles.muted} style={{ fontSize: 13 }}>
-              By photos shared
-            </span>
-          </div>
-          {top.length === 0 ? (
-            <p className={styles.muted}>No organizers have events yet.</p>
-          ) : (
-            <ol className={styles.list}>
-              {top.map((t, i) => (
-                <li key={t.organizer.id}>
-                  <button type="button" className={styles.rowButton} onClick={() => setOpenOrg(t)}>
-                    <span className={`${styles.rank} ${i === 0 ? styles.rankFirst : ""}`}>{i + 1}</span>
-                    <div>
-                      <b>{t.organizer.org}</b>
-                      <div className={styles.itemMeta}>
-                        {t.events} event{t.events === 1 ? "" : "s"} · {t.organizer.person}
-                      </div>
-                    </div>
-                    <b>{t.photos}</b>
-                    <span className={styles.muted} style={{ fontSize: 13 }}>
-                      photos
-                    </span>
-                    <span className={styles.chevron}>
-                      <ChevronRightIcon />
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
-
-        <section className={styles.card} aria-labelledby="per-event-title">
-          <div className={styles.cardHead}>
-            <h2 id="per-event-title" className={styles.cardTitle}>
-              Photos per Event
-            </h2>
-            <span className={styles.muted} style={{ fontSize: 13 }}>
-              Shared / capacity
-            </span>
-          </div>
-          {byPhotos.length === 0 ? (
-            <p className={styles.muted}>No events yet.</p>
-          ) : (
-            <ul className={styles.list}>
-              {byPhotos.map((e) => (
-                <li key={e.id} className={styles.barRow}>
-                  <div className={styles.barTop}>
-                    <b className={styles.ellipsis}>{e.name}</b>
-                    <span className={styles.muted}>
-                      {e.photoCount} / {e.capacity}
-                    </span>
-                  </div>
-                  <div className={styles.barTrack} role="img" aria-label={`${e.name}: ${e.photoCount} of ${e.capacity} photos`}>
-                    <span style={{ width: `${Math.min(100, (e.photoCount / Math.max(1, e.capacity)) * 100)}%` }} />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <TopList title="Top Events by Participants" unit="participants" field="participants" events={byParticipants} />
+        <TopList title="Top Events by Pictures" unit="pictures" field="photoCount" events={byPhotos} />
       </div>
 
-      {openOrg && <OrganizerDetails top={openOrg} onClose={() => setOpenOrg(null)} />}
+      <section className={styles.card} aria-labelledby="per-event-title">
+        <div className={styles.cardHead}>
+          <h2 id="per-event-title" className={styles.cardTitle}>
+            Per Event
+          </h2>
+          <label className={styles.sortSelect}>
+            <span>Sort by</span>
+            <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+              <option value="date">Date (newest first)</option>
+              <option value="participants">Most participants</option>
+              <option value="photoCount">Most pictures</option>
+            </select>
+          </label>
+        </div>
+        {perEvent.length === 0 ? (
+          <p className={styles.muted}>{filter === "all" ? "No events yet." : `No ${GROUP_LABEL[filter as EventGroup].toLowerCase()} events.`}</p>
+        ) : (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  {header("date", "Event")}
+                  <th scope="col" className={styles.colOrg}>
+                    Organizer
+                  </th>
+                  {header("participants", "Participants", true)}
+                  {header("photoCount", "Pictures", true)}
+                </tr>
+              </thead>
+              <tbody>
+                {perEvent.map((e) => (
+                  <tr key={e.id}>
+                    <td>
+                      <Link href={`/admin/events/${e.id}/gallery`} className={styles.tableLink}>
+                        {e.name}
+                      </Link>
+                      <span className={`${styles.groupTag} ${styles[`group_${eventGroup(e)}`]}`}>{GROUP_LABEL[eventGroup(e)]}</span>
+                      <span className={styles.itemMeta} style={{ display: "block" }}>
+                        {formatWhen(e.date, "")}
+                        
+                      </span>
+                    </td>
+                    <td className={styles.colOrg}>{getOrganizer(e.organizerId)?.org ?? "—"}</td>
+                    <td className={styles.num}>{e.participants}</td>
+                    <td className={styles.num}>
+                      {e.photoCount}
+                      <span className={styles.itemMeta}> / {e.capacity}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </>
   );
 }
 
-/** Popup: one organizer, their events and photo counts. */
-function OrganizerDetails({ top, onClose }: { top: TopOrganizer; onClose: () => void }) {
-  const { events, reports } = useAdminStore();
-  const org = top.organizer;
-  const theirs = events.filter((e) => e.organizerId === org.id);
-  const waiting = reports.filter((r) => r.state === "waiting" && theirs.some((e) => e.id === r.eventId)).length;
-
+/** A ranked list of events with a bar for each, scaled to the top one. */
+function TopList({
+  title,
+  unit,
+  field,
+  events
+}: {
+  title: string;
+  unit: string;
+  field: "participants" | "photoCount";
+  events: AdminEvent[];
+}) {
+  const most = Math.max(1, ...events.map((e) => e[field]));
+  const id = `${field}-title`;
   return (
-    <Modal labelledBy="org-title" onClose={onClose} className={styles.detailDialog}>
-      <div className={styles.detailHead}>
-        <span className={`${styles.avatar} ${styles.avatarLarge}`} aria-hidden="true">
-          {initials(org.org)}
-        </span>
-        <h2 id="org-title">
-          {org.org}
-          <div className={styles.itemMeta} style={{ fontWeight: 400 }}>
-            {org.person} · {org.email}
-          </div>
+    <section className={styles.card} aria-labelledby={id}>
+      <div className={styles.cardHead}>
+        <h2 id={id} className={styles.cardTitle}>
+          {title}
         </h2>
-        <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Close" data-autofocus>
-          <CloseIcon />
-        </button>
       </div>
-      <div className={styles.stats}>
-        <div className={styles.stat}>
-          <div className={styles.statLabel}>Events</div>
-          <div className={styles.statValue}>{top.events}</div>
-        </div>
-        <div className={styles.stat}>
-          <div className={styles.statLabel}>Photos</div>
-          <div className={styles.statValue}>{top.photos}</div>
-        </div>
-        <div className={styles.stat}>
-          <div className={styles.statLabel}>Reports waiting</div>
-          <div className={styles.statValue}>{waiting}</div>
-        </div>
-      </div>
-      <div>
-        <h3 className={styles.subhead}>Their events</h3>
-        <ul className={styles.entries}>
-          {theirs.map((e) => (
-            <li key={e.id}>
-              <span>
-                <b>{e.name}</b>
-                <div className={styles.itemMeta}>{formatWhen(e.date, e.time, e.endDate, e.endTime)}</div>
-              </span>
-              <span className={styles.muted} style={{ whiteSpace: "nowrap" }}>
-                {e.photoCount} / {e.capacity}
-              </span>
+      {events.length === 0 ? (
+        <p className={styles.muted}>No {unit} yet.</p>
+      ) : (
+        <ol className={styles.list}>
+          {events.map((e, i) => (
+            <li key={e.id} className={styles.barRow}>
+              <div className={styles.barTop}>
+                <span className={styles.ellipsis}>
+                  <span className={`${styles.rank} ${i === 0 ? styles.rankFirst : ""}`} style={{ display: "inline-grid", marginRight: 10, width: 24, height: 24, fontSize: 12 }}>
+                    {i + 1}
+                  </span>
+                  <Link href={`/admin/events/${e.id}/gallery`} className={styles.tableLink}>
+                    {e.name}
+                  </Link>
+                </span>
+                <span>
+                  <b>{e[field]}</b> <span className={styles.muted}>{unit}</span>
+                </span>
+              </div>
+              <div className={styles.barTrack} role="img" aria-label={`${e.name}: ${e[field]} ${unit}`}>
+                <span style={{ width: `${(e[field] / most) * 100}%` }} />
+              </div>
             </li>
           ))}
-        </ul>
-      </div>
-    </Modal>
+        </ol>
+      )}
+    </section>
   );
 }

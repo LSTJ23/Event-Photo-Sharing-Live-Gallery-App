@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/admin/AdminShell";
+import { useBackTo } from "@/components/admin/useBackTo";
 import { useAdminStore } from "@/components/admin/AdminStore";
 import { EventFormView } from "@/components/admin/EventFormView";
 import styles from "@/components/admin/dashboard.module.css";
@@ -13,13 +14,14 @@ export default function EditEventPage() {
   const router = useRouter();
   const { getEvent, updateEvent } = useAdminStore();
   const event = getEvent(id);
+  const back = useBackTo("/admin/events");
 
   if (!event) {
     return (
       <>
-        <PageHeader title="Event not found" back="/admin/events" subtitle="It may have been deleted, or the link is wrong." />
-        <Link href="/admin/events" className={styles.btn} style={{ alignSelf: "flex-start" }}>
-          Back to events
+        <PageHeader title="Event not found" back={back} subtitle="It may have been deleted, or the link is wrong." />
+        <Link href={back} className={styles.btn} style={{ alignSelf: "flex-start" }}>
+          Go back
         </Link>
       </>
     );
@@ -27,7 +29,7 @@ export default function EditEventPage() {
 
   return (
     <div className={`${styles.centered} ${styles.centeredWide}`}>
-      <PageHeader title="Edit Event" back="/admin/events" subtitle={event.name} />
+      <PageHeader title="Edit Event" back={back} subtitle={event.name} />
       <EventFormView
         initial={{
           name: event.name,
@@ -42,10 +44,10 @@ export default function EditEventPage() {
         }}
         minCapacity={Math.max(1, event.photoCount)}
         submitLabel="Save changes"
-        cancelHref="/admin/events"
+        cancelHref={back}
         onSubmit={(form) => {
           updateEvent(event.id, form);
-          router.push("/admin/events");
+          router.push(back);
         }}
       />
     </div>

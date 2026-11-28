@@ -6,11 +6,17 @@
 //
 // Routes the frontend expects from the backend:
 //   GET  /events/:eventId          → EventInfo            (404 if no such event)
-//   GET  /events/:eventId/photos   → Photo[]              (newest first)
+//   GET  /events/:eventId/photos   → Photo[]              (newest first, without hidden photos)
+//   GET  /events/:eventId/photos?includeHidden=true → Photo[] with hidden ones marked
+//                                  hidden: true (the event's organizer and admins only)
 //   POST /events/:eventId/photos   multipart fields "photo" (the image) and
 //                                  "anonymous" ("true" | "false") → Photo (201)
 //
+//   POST /events/:eventId/photos/:photoId/reports   JSON { reason, details? } → 201
+//                                  (any participant; the event's organizer reviews it)
 //   DELETE /events/:eventId/photos/:photoId                  → 204 (admins only)
+//   PATCH  /events/:eventId/photos/:photoId   JSON { hidden } → 204 (admins only)
+//                                  hides the photo from guests, or shows it again
 //
 // For uploads, the backend should take the name from the signed-in user and
 // return sharedBy as "Anonymous" when anonymous is "true", so a hidden name
@@ -39,9 +45,14 @@ export async function getEvent(eventId: string): Promise<EventInfo | null> {
   }
 }
 
-export async function listPhotos(eventId: string): Promise<Photo[]> {
-  if (USE_MOCK_API) return mock.listPhotos(eventId);
-  return request<Photo[]>(`/events/${encodeURIComponent(eventId)}/photos`);
+/**
+ * An event's photos, newest first. Guests never get hidden photos; pass
+ * includeHidden (organizer and admin pages) to get them too, marked hidden.
+ */
+export async function listPhotos(eventId: string, options: { includeHidden?: boolean } = {}): Promise<Photo[]> {
+  if (USE_MOCK_API) return mock.listPhotos(eventId, options);
+  const query = options.includeHidden ? "?includeHidden=true" : "";
+  return request<Photo[]>(`/events/${encodeURIComponent(eventId)}/photos${query}`);
 }
 
 export interface UploadOptions {
@@ -55,6 +66,35 @@ export async function uploadPhoto(eventId: string, image: Blob, options: UploadO
   body.append("photo", image, "photo.jpg");
   body.append("anonymous", String(options.anonymous));
   return request<Photo>(`/events/${encodeURIComponent(eventId)}/photos`, { method: "POST", body });
+}
+
+export interface ReportInput {
+  /** One of REPORT_REASONS (lib/reportReasons.ts). */
+  reason: string;
+  /** Optional, required when the reason is "Other". */
+  details?: string;
+}
+
+/** A participant reports a photo; it goes to the event organizer's Reported photos. */
+export async function reportPhoto(eventId: string, photoId: string, report: ReportInput): Promise<void> {
+  if (USE_MOCK_API) return mock.reportPhoto(eventId, photoId, report);
+  const response = await fetch(`${API_URL}/events/${encodeURIComponent(eventId)}/photos/${encodeURIComponent(photoId)}/reports`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(report)
+  });
+  if (!response.ok) throw new Error(`Reporting photo ${photoId} failed with status ${response.status}`);
+}
+
+/** Admins only: hides a photo from guests (or shows it again). The organizer still sees it and can delete it. */
+export async function setPhotoHidden(eventId: string, photoId: string, hidden: boolean): Promise<void> {
+  if (USE_MOCK_API) return mock.setPhotoHidden(eventId, photoId, hidden);
+  const response = await fetch(`${API_URL}/events/${encodeURIComponent(eventId)}/photos/${encodeURIComponent(photoId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ hidden })
+  });
+  if (!response.ok) throw new Error(`Hiding photo ${photoId} failed with status ${response.status}`);
 }
 
 /** Admins only: removes photos from the event gallery for everyone. */

@@ -6,7 +6,15 @@ import type { EventInfo, Photo } from "./types";
 
 const events: EventInfo[] = [
   { id: "dlsu-cso-event", name: "DLSU CSO Event", date: "2026-10-14", location: "Manila", shareLinkActive: true },
-  { id: "event-2", name: "Event 2", date: "2026-12-03", location: "TBD", shareLinkActive: true }
+  { id: "event-2", name: "Event 2", date: "2026-12-03", location: "TBD", shareLinkActive: true },
+  // A past event, so Past events, Download all photos and Display gallery have something to show.
+  {
+    id: "freshmen-welcome-night",
+    name: "Freshmen Welcome Night",
+    date: "2026-08-22",
+    location: "Teresa Yuchengco Auditorium",
+    shareLinkActive: false
+  }
 ];
 
 function placeholderImage(n: number): string {
@@ -37,6 +45,20 @@ const photos: Photo[] = Array.from({ length: 24 }, (_, i) => {
   };
 });
 
+// 12 photos from the past event.
+photos.push(
+  ...Array.from({ length: 12 }, (_, i) => {
+    const n = 12 - i;
+    return {
+      id: `welcome-${n}`,
+      eventId: "freshmen-welcome-night",
+      url: placeholderImage(100 + n),
+      sharedBy: sharedByLabel(sampleNames[(n + 2) % sampleNames.length], n % 4 === 0),
+      createdAt: new Date(Date.UTC(2026, 7, 22, 9, 10 + n * 7)).toISOString()
+    };
+  })
+);
+
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function getEvent(eventId: string): Promise<EventInfo | null> {
@@ -44,9 +66,15 @@ export async function getEvent(eventId: string): Promise<EventInfo | null> {
   return events.find((event) => event.id === eventId) ?? null;
 }
 
-export async function listPhotos(eventId: string): Promise<Photo[]> {
+export async function listPhotos(eventId: string, options: { includeHidden?: boolean } = {}): Promise<Photo[]> {
   await wait(150);
-  return photos.filter((photo) => photo.eventId === eventId);
+  return photos.filter((photo) => photo.eventId === eventId && (options.includeHidden || !photo.hidden)).map((photo) => ({ ...photo }));
+}
+
+export async function setPhotoHidden(eventId: string, photoId: string, hidden: boolean): Promise<void> {
+  await wait(300);
+  const photo = photos.find((p) => p.eventId === eventId && p.id === photoId);
+  if (photo) photo.hidden = hidden;
 }
 
 export async function uploadPhoto(eventId: string, image: Blob, options: { anonymous: boolean }, userName: string): Promise<Photo> {
@@ -68,4 +96,12 @@ export async function removePhotos(eventId: string, photoIds: string[]): Promise
   for (let i = photos.length - 1; i >= 0; i--) {
     if (photos[i].eventId === eventId && remove.has(photos[i].id)) photos.splice(i, 1);
   }
+}
+
+/** Reports sent from this browser (mock only). TODO (backend): store them and show them to the organizer. */
+export const sentReports: { eventId: string; photoId: string; reason: string; details?: string; at: string }[] = [];
+
+export async function reportPhoto(eventId: string, photoId: string, report: { reason: string; details?: string }): Promise<void> {
+  await wait(400);
+  sentReports.push({ eventId, photoId, ...report, at: new Date().toISOString() });
 }

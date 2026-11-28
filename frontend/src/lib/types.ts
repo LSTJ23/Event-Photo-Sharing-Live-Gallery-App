@@ -18,4 +18,9 @@ export interface Photo {
   sharedBy: string;
   /** ISO 8601 timestamp of when it was shared. */
   createdAt: string;
+  /**
+   * Hidden by an admin: guests (the participant gallery and the Display
+   * gallery) don't get it at all; the organizer and admins still see it.
+   */
+  hidden?: boolean;
 }
