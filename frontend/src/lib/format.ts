@@ -2,13 +2,14 @@
 const tidy = (text: string) => text.replace(/[  ]/g, " ");
 
 /** "2026-10-14" → "October 14, 2026" */
-export function formatEventDate(date: string): string {
+/** "October 14, 2026", or "Oct 14, 2026" with short (as on the admin pages). */
+export function formatEventDate(date: string, short = false): string {
   const parsed = new Date(`${date}T12:00:00Z`);
   if (Number.isNaN(parsed.getTime())) return date;
   return tidy(
     parsed.toLocaleDateString("en-US", {
       year: "numeric",
-      month: "long",
+      month: short ? "short" : "long",
       day: "numeric",
       timeZone: "UTC"
     })

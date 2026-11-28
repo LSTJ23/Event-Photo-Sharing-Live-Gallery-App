@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { DownloadPhotosButton } from "@/components/DownloadPhotosButton";
+import { ShareLinkModal } from "@/components/ShareLinkModal";
+import { useOrigin } from "@/components/useOrigin";
 import { ArchiveIcon, CalendarIcon, RestoreIcon, SearchIcon, TrashIcon } from "@/components/icons";
 import { PageHeader } from "@/components/admin/AdminShell";
 import { useFrom, useHere, withFrom } from "@/components/admin/useBackTo";
 import { useAdminStore } from "@/components/admin/AdminStore";
 import styles from "@/components/admin/dashboard.module.css";
 import { eventTab, formatWhen, matches, type AdminEvent, type EventTab } from "@/lib/adminData";
+import { shareLinkFor } from "@/lib/shareLink";
 
 function StatusPill({ status }: { status: AdminEvent["status"] }) {
   if (status === "LIVE")
@@ -35,6 +38,8 @@ export default function ManageEventsPage() {
   const [query, setQuery] = useState("");
   const [deleting, setDeleting] = useState<AdminEvent | null>(null);
   const [archiving, setArchiving] = useState<{ event: AdminEvent; restore: boolean } | null>(null);
+  const [sharing, setSharing] = useState<AdminEvent | null>(null);
+  const origin = useOrigin();
   const inTab = events.filter((e) => eventTab(e) === tab);
   const shown = inTab.filter((e) => matches(query, e.name, e.venue, e.hashtag, getOrganizer(e.organizerId)?.org));
   const count = (t: EventTab) => events.filter((e) => eventTab(e) === t).length;
@@ -122,9 +127,9 @@ export default function ManageEventsPage() {
                       <Link href={to(`/admin/events/${e.id}/gallery`)} className={`${styles.btn} ${styles.small}`}>
                         Gallery
                       </Link>
-                      <Link href={to(`/admin/events/${e.id}/qr`)} className={`${styles.btn} ${styles.small}`}>
-                        QR
-                      </Link>
+                      <button type="button" className={`${styles.btn} ${styles.small}`} onClick={() => setSharing(e)} disabled={!origin}>
+                        Share
+                      </button>
                     </div>
                   ) : (
                     <div className={styles.pastActions}>
@@ -134,7 +139,7 @@ export default function ManageEventsPage() {
                       <DownloadPhotosButton
                         eventId={e.id}
                         eventName={e.name}
-                        label="Download"
+                        label="Download photos"
                         className={`${styles.btn} ${styles.small}`}
                         onDone={notify}
                       />
@@ -158,6 +163,7 @@ export default function ManageEventsPage() {
           })}
         </div>
       )}
+      {sharing && origin && <ShareLinkModal link={shareLinkFor(origin, sharing.id)} eventId={sharing.id} onClose={() => setSharing(null)} />}
       {archiving && (
         <ConfirmDialog
           title={`${archiving.restore ? "Restore" : "Archive"} ${archiving.event.name}?`}

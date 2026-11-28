@@ -65,7 +65,7 @@ function PastEvents() {
                     {event.when} · {event.venue} · {event.photos.length} {event.photos.length === 1 ? "photo" : "photos"}
                   </p>
                 </div>
-                <span className={`${styles.status} ${styles.statusUpcoming}`}>{event.archived ? "ARCHIVED" : "ENDED"}</span>
+                <span className={`${styles.status} ${styles.statusUpcoming}`}>{event.archived ? "Archived" : "Ended"}</span>
               </div>
 
               <div className={styles.pastActions}>

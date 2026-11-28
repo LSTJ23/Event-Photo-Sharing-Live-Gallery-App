@@ -8,7 +8,7 @@ import { ReportDetails } from "@/components/admin/ReportDetails";
 import { useAdminStore } from "@/components/admin/AdminStore";
 import { withFrom } from "@/components/admin/useBackTo";
 import styles from "@/components/admin/dashboard.module.css";
-import { getStats, needsAttention, type AttentionItem } from "@/lib/adminData";
+import { needsAttention, reportStats, type AttentionItem } from "@/lib/adminData";
 
 function Shortcut({ href, icon, label, hint, light }: { href: string; icon: React.ReactNode; label: string; hint: string; light?: boolean }) {
   return (
@@ -28,7 +28,7 @@ export default function AdminHomePage() {
   // The event whose waiting reported photos are open in the popup.
   const [viewing, setViewing] = useState<string | null>(null);
   const viewingReports = reports.filter((r) => r.eventId === viewing && r.state === "waiting").sort((a, b) => b.count - a.count);
-  const stats = getStats(events, organizers);
+  const stats = reportStats(reports);
   const items = needsAttention(events, organizers, reports);
 
   const remind = (eventId: string) => {
@@ -137,16 +137,16 @@ export default function AdminHomePage() {
         </div>
         <div className={styles.stats}>
           <div className={styles.stat}>
-            <div className={styles.statLabel}>Total events</div>
-            <div className={styles.statValue}>{stats.totalEvents}</div>
+            <div className={styles.statLabel}>Waiting for organizer</div>
+            <div className={styles.statValue}>{stats.waiting}</div>
           </div>
           <div className={styles.stat}>
-            <div className={styles.statLabel}>Active events</div>
-            <div className={styles.statValue}>{stats.activeEvents}</div>
+            <div className={styles.statLabel}>Kept or removed</div>
+            <div className={styles.statValue}>{stats.kept + stats.removed}</div>
           </div>
           <div className={styles.stat}>
-            <div className={styles.statLabel}>Active users</div>
-            <div className={styles.statValue}>{stats.activeUsers}</div>
+            <div className={styles.statLabel}>Reports in total</div>
+            <div className={styles.statValue}>{stats.totalReports}</div>
           </div>
         </div>
       </section>

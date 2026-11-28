@@ -36,7 +36,8 @@ export default function EventsPage() {
                     </p>
                   </div>
                   <span className={`${styles.status} ${live ? styles.statusLive : styles.statusUpcoming}`}>
-                    {event.status}
+                    {live && <span className={styles.statusDot} aria-hidden="true" />}
+                    {live ? "Live" : "Upcoming"}
                   </span>
                 </div>
 

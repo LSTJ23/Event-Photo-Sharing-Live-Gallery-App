@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  eventGroup,
+  openReportCount,
+  reportsForPhoto,
+  reportStats,
+  summarize,
   initialAdminReports,
   eventFormErrors,
   formatWhen,
@@ -127,5 +132,45 @@ describe("topEvents", () => {
     expect(topEvents(initialAdminEvents, "participants").map((e) => e.id)).toEqual(["freshmen-welcome-night", "dlsu-cso-event"]);
     expect(topEvents(initialAdminEvents, "photoCount").map((e) => e.photoCount)).toEqual([126, 48]);
     expect(topEvents(initialAdminEvents, "photoCount", 1).length).toBe(1);
+  });
+});
+
+describe("eventGroup", () => {
+  it("splits current events into live and upcoming, and past ones into past and archived", () => {
+    const [live, upcoming, ended] = initialAdminEvents;
+    expect(eventGroup(live)).toBe("live");
+    expect(eventGroup(upcoming)).toBe("upcoming");
+    expect(eventGroup(ended)).toBe("past");
+    expect(eventGroup({ ...ended, archived: true })).toBe("archived");
+  });
+});
+
+describe("summarize", () => {
+  it("adds up participants and pictures and averages pictures per event", () => {
+    const total = summarize(initialAdminEvents);
+    expect(total.events).toBe(3);
+    expect(total.participants).toBe(53);
+    expect(total.photos).toBe(174);
+    expect(total.photosPerEvent).toBe(58);
+  });
+
+  it("is all zeros with no events", () => {
+    expect(summarize([])).toEqual({ events: 0, participants: 0, photos: 0, photosPerEvent: 0 });
+  });
+});
+
+describe("reports for a photo", () => {
+  it("finds the reports about a photo and counts the ones still waiting", () => {
+    expect(reportsForPhoto(initialAdminReports, "sample-9").length).toBe(1);
+    expect(openReportCount(initialAdminReports, "sample-9")).toBe(3);
+    // Photo 13's report was kept by the organizer, so nothing is waiting.
+    expect(openReportCount(initialAdminReports, "sample-13")).toBe(0);
+    expect(openReportCount(initialAdminReports, "sample-1")).toBe(0);
+  });
+});
+
+describe("reportStats", () => {
+  it("counts reported photos by decision and adds up every report", () => {
+    expect(reportStats(initialAdminReports)).toEqual({ waiting: 3, kept: 1, removed: 0, totalReports: 7 });
   });
 });

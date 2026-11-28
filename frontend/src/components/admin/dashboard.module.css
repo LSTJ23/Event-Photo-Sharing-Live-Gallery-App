@@ -1357,14 +1357,14 @@ select.input {
 }
 
 .photoSelected img {
-  opacity: 0.75;
   transform: scale(0.94);
-  outline: 3px solid var(--bad);
+  outline: 3px solid #111;
   outline-offset: 2px;
 }
 
 .photoCheck {
   position: absolute;
+  z-index: 1;
   top: 8px;
   left: 8px;
   display: grid;
@@ -1380,8 +1380,8 @@ select.input {
 }
 
 .photoSelected .photoCheck {
-  border-color: var(--bad);
-  background: var(--bad);
+  border-color: #fff;
+  background: #111;
 }
 
 .selectBar {
@@ -1441,7 +1441,9 @@ select.input {
   }
 }
 
-.photo figcaption {
+.photo figcaption,
+.photo .photoCaption {
+  display: block;
   margin-top: 6px;
   color: var(--muted);
   font-size: 12px;
@@ -1907,4 +1909,347 @@ select.input {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.94);
   }
+}
+
+/* Admin gallery: click a photo to open it (Download, Delete). */
+.photoOpen {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: zoom-in;
+}
+
+.photoOpen:hover img {
+  opacity: 0.88;
+}
+
+/* ---------- Analytics: event filter, 4 stat cards, status tags ---------- */
+
+.stats4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 900px) {
+  .stats4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.groupTag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #f2f2f2;
+  color: #555;
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+
+.group_live {
+  background: #e7f6ec;
+  color: #1a7f45;
+}
+
+.group_upcoming {
+  background: #e8f1fd;
+  color: #1d5fbf;
+}
+
+.group_archived {
+  background: #f1ecfd;
+  color: #6b3fc4;
+}
+
+/* ---------- Reported photos in the admin gallery ---------- */
+
+.photo {
+  position: relative;
+}
+
+/* Small phones: one button per row so labels like "Download all photos" fit. */
+@media (max-width: 480px) {
+  .galleryActions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Reported photo popup: photo left, details right ---------- */
+
+.reportDialog.reportDialog {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 0;
+  width: 56rem;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  overflow: hidden auto;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+@media (min-width: 760px) {
+  .reportDialog.reportDialog {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    overflow: hidden;
+  }
+}
+
+.reportPhoto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  max-height: 46dvh;
+  background: #111;
+}
+
+@media (min-width: 760px) {
+  .reportPhoto {
+    max-height: none;
+  }
+}
+
+.reportPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: inherit;
+  object-fit: contain;
+}
+
+.reportPhotoBlank {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+  background: #ececec;
+  color: #666;
+  font-size: 14px;
+}
+
+.reportBody {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  padding: 20px;
+}
+
+@media (min-width: 760px) {
+  .reportBody {
+    max-height: calc(100dvh - 24px);
+    padding: 24px;
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
+}
+
+.reportStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f2f2f2;
+  color: #444;
+  font-size: 14px;
+}
+
+.reportStatus span {
+  color: inherit;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.reportStatusWaiting {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.reportStatusKept {
+  background: #e7f6ec;
+  color: #1a7f45;
+}
+
+.reportStatusRemoved {
+  background: #fdecea;
+  color: #b42318;
+}
+
+.reasonChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.reasonChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fdecea;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reasonChip b {
+  font-weight: 700;
+}
+
+.reportBody .details {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.reportBody .detailActions {
+  margin-top: auto;
+}
+
+/* ---------- Report Logs: reported photos as cards ---------- */
+
+.reportGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reportCard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.reportCard:hover {
+  border-color: #cfcfcf;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.07);
+}
+
+.reportThumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  background: var(--soft);
+}
+
+.reportThumb {
+  overflow: hidden;
+}
+
+.reportThumb img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reportCardBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 14px 14px;
+  font-size: 14px;
+}
+
+.reportCardBody .pill {
+  margin-top: 6px;
+}
+
+.pillBad {
+  background: #fdecea;
+  color: #b42318;
+}
+
+.tabs + .reportGrid {
+  margin-top: 16px;
+}
+
+/* Photo with its badges (Hidden, reports) on top. */
+.photoFrame {
+  position: relative;
+  display: block;
+}
+
+/* Report popup: who reported it, why and when, in three tidy columns. */
+.reportBody .entries li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 5.5rem;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.reportBody .entries li > span:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.reportPhoto {
+  position: relative;
+}
+
+.reportBody .detailActions .btn,
+.reportBody .detailActions .btnDark {
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.reasonChip.reasonChipHidden {
+  background: #f0f0f0;
+  color: #555;
+}
+
+/* Delete in the report popup: light red, same as the organizer's. */
+.btn.deleteSoft {
+  border-color: #f5b5ae;
+  background: #fddcd8;
+  color: #a3201a;
+}
+
+.btn.deleteSoft:hover:not(:disabled) {
+  border-color: #ef9a91;
+  background: #fbcac4;
+}
+
+/* Keep in the report popup: light green, same as the organizer's. */
+.btn.keepSoft {
+  border-color: #a6dcb9;
+  background: #d3f1de;
+  color: #146c3a;
+}
+
+.btn.keepSoft:hover:not(:disabled) {
+  border-color: #86cfa0;
+  background: #c2ead0;
+}
+
+/* Open gallery sits on the left, away from the decision buttons. */
+.galleryLink {
+  margin-right: auto;
 }

@@ -66,9 +66,15 @@ export async function getEvent(eventId: string): Promise<EventInfo | null> {
   return events.find((event) => event.id === eventId) ?? null;
 }
 
-export async function listPhotos(eventId: string): Promise<Photo[]> {
+export async function listPhotos(eventId: string, options: { includeHidden?: boolean } = {}): Promise<Photo[]> {
   await wait(150);
-  return photos.filter((photo) => photo.eventId === eventId);
+  return photos.filter((photo) => photo.eventId === eventId && (options.includeHidden || !photo.hidden)).map((photo) => ({ ...photo }));
+}
+
+export async function setPhotoHidden(eventId: string, photoId: string, hidden: boolean): Promise<void> {
+  await wait(300);
+  const photo = photos.find((p) => p.eventId === eventId && p.id === photoId);
+  if (photo) photo.hidden = hidden;
 }
 
 export async function uploadPhoto(eventId: string, image: Blob, options: { anonymous: boolean }, userName: string): Promise<Photo> {

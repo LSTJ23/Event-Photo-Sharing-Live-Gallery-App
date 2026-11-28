@@ -1,41 +1,59 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRightIcon } from "@/components/icons";
 import { PageHeader } from "@/components/admin/AdminShell";
 import { ReportDetails } from "@/components/admin/ReportDetails";
 import { useFrom } from "@/components/admin/useBackTo";
 import { useAdminStore } from "@/components/admin/AdminStore";
+import { useReportPhotos } from "@/components/useReportPhotos";
+import { HiddenBadge, ReportFlag } from "@/components/ReportMarkers";
 import styles from "@/components/admin/dashboard.module.css";
-import { getStats, type AdminReport } from "@/lib/adminData";
+import { reportStats, type AdminReport } from "@/lib/adminData";
 
 /**
- * Report logs: the totals and reported photos. Click a reported photo for the
- * details in a popup.
+ * Report logs: how many reported photos are waiting, kept or removed, and the
+ * reported photos themselves (Waiting first). Click one for the details.
  * Reported photos are view-only: only the event's organizer can keep or remove them.
  */
+type Filter = "waiting" | "kept" | "removed" | "all";
+
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: "waiting", label: "Waiting" },
+  { key: "kept", label: "Kept" },
+  { key: "removed", label: "Removed" },
+  { key: "all", label: "All" }
+];
+
 export default function ReportLogsPage() {
-  const { events, organizers, reports, getEvent, getOrganizer } = useAdminStore();
+  const { reports, getEvent, getOrganizer } = useAdminStore();
   const from = useFrom();
   const [openReport, setOpenReport] = useState<AdminReport | null>(null);
-  const stats = getStats(events, organizers);
+  const [filter, setFilter] = useState<Filter>("waiting");
+  const stats = reportStats(reports);
+  const { photos } = useReportPhotos(reports);
+  const count = (f: Filter) => (f === "all" ? reports.length : reports.filter((r) => r.state === f).length);
+  const shown = filter === "all" ? reports : reports.filter((r) => r.state === filter);
 
   return (
     <>
       <PageHeader title="Report Logs" back={from} />
 
-      <div className={styles.stats}>
+      <div className={`${styles.stats} ${styles.stats4}`}>
         <div className={styles.stat}>
-          <div className={styles.statLabel}>Total events</div>
-          <div className={styles.statValue}>{stats.totalEvents}</div>
+          <div className={styles.statLabel}>Waiting for organizer</div>
+          <div className={styles.statValue}>{stats.waiting}</div>
         </div>
         <div className={styles.stat}>
-          <div className={styles.statLabel}>Active events</div>
-          <div className={styles.statValue}>{stats.activeEvents}</div>
+          <div className={styles.statLabel}>Kept</div>
+          <div className={styles.statValue}>{stats.kept}</div>
         </div>
         <div className={styles.stat}>
-          <div className={styles.statLabel}>Active users</div>
-          <div className={styles.statValue}>{stats.activeUsers}</div>
+          <div className={styles.statLabel}>Removed</div>
+          <div className={styles.statValue}>{stats.removed}</div>
+        </div>
+        <div className={styles.stat}>
+          <div className={styles.statLabel}>Reports in total</div>
+          <div className={styles.statValue}>{stats.totalReports}</div>
         </div>
       </div>
 
@@ -44,32 +62,45 @@ export default function ReportLogsPage() {
           <h2 id="reported-title" className={styles.cardTitle}>
             Reported Photos
           </h2>
-          <span className={styles.muted} style={{ fontSize: 13 }}>
-            {reports.filter((r) => r.state === "waiting").length} waiting
-          </span>
         </div>
-        {reports.length === 0 ? (
-          <p className={styles.muted}>No photos have been reported.</p>
+        <div className={styles.tabs} role="tablist" aria-label="Which reports">
+          {FILTERS.map((f) => (
+            <button key={f.key} type="button" role="tab" aria-selected={filter === f.key} onClick={() => setFilter(f.key)}>
+              {f.label} · {count(f.key)}
+            </button>
+          ))}
+        </div>
+
+        {shown.length === 0 ? (
+          <p className={styles.muted} style={{ marginTop: 16 }}>
+            {filter === "waiting" ? "Nothing waiting. Every reported photo has been handled." : "No reports here."}
+          </p>
         ) : (
-          <ul className={styles.list}>
-            {reports.map((r) => {
+          <ul className={styles.reportGrid}>
+            {shown.map((r) => {
               const event = getEvent(r.eventId);
               const org = event ? getOrganizer(event.organizerId) : undefined;
+              const photo = r.photoId ? photos[r.photoId] : undefined;
+              const url = photo?.url;
               return (
                 <li key={r.id}>
-                  <button type="button" className={styles.rowButton} onClick={() => setOpenReport(r)}>
-                    <span className={styles.thumb} style={{ background: r.shade }} aria-hidden="true" />
-                    <div>
-                      <b>{r.reason}</b>
-                      <div className={styles.itemMeta}>
-                        {event?.name ?? "Deleted event"} · {r.count} report{r.count === 1 ? "" : "s"} · {r.time}
-                      </div>
-                    </div>
-                    <span className={`${styles.pill} ${r.state === "waiting" ? styles.pillWarn : ""}`}>
-                      {r.state === "waiting" ? `Waiting for ${org?.org ?? "organizer"}` : r.state === "kept" ? "Kept" : "Removed"}
+                  <button type="button" className={styles.reportCard} onClick={() => setOpenReport(r)}>
+                    <span className={styles.reportThumb} style={url ? undefined : { background: r.shade }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element -- photo URLs can be blob: or any storage host */}
+                      {url && <img src={url} alt="" loading="lazy" />}
+                      <ReportFlag count={r.count} />
+                      <HiddenBadge hidden={photo?.hidden} />
                     </span>
-                    <span className={styles.chevron}>
-                      <ChevronRightIcon />
+                    <span className={styles.reportCardBody}>
+                      <b>{r.reason}</b>
+                      <span className={styles.itemMeta}>
+                        {event?.name ?? "Deleted event"} · {r.time}
+                      </span>
+                      <span
+                        className={`${styles.pill} ${r.state === "waiting" ? styles.pillWarn : r.state === "kept" ? styles.pillGood : styles.pillBad}`}
+                      >
+                        {r.state === "waiting" ? `Waiting for ${org?.org ?? "organizer"}` : r.state === "kept" ? "Kept" : "Removed"}
+                      </span>
                     </span>
                   </button>
                 </li>

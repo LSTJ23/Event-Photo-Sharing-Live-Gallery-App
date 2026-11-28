@@ -5,19 +5,33 @@ import { useState } from "react";
 import { PageHeader } from "@/components/admin/AdminShell";
 import { useAdminStore } from "@/components/admin/AdminStore";
 import styles from "@/components/admin/dashboard.module.css";
-import { formatWhen, topEvents, type AdminEvent } from "@/lib/adminData";
+import { eventGroup, formatWhen, summarize, topEvents, type AdminEvent, type EventGroup } from "@/lib/adminData";
 
 type SortKey = "date" | "participants" | "photoCount";
+type Filter = "all" | EventGroup;
+
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: "all", label: "All events" },
+  { key: "live", label: "Live" },
+  { key: "upcoming", label: "Upcoming" },
+  { key: "past", label: "Past" },
+  { key: "archived", label: "Archived" }
+];
+
+const GROUP_LABEL: Record<EventGroup, string> = { live: "Live", upcoming: "Upcoming", past: "Past", archived: "Archived" };
 
 /**
- * Analytics. Whole app: totals, the top events by participants and by
- * pictures. Per event: participants and pictures uploaded, sorted by date (default),
- * most participants or most pictures (the dropdown or a column header).
+ * Analytics for the whole app. Pick which events to look at (all, live,
+ * upcoming, past or archived); the totals, the top events by participants and
+ * by pictures, and the per-event table all follow that choice. The table sorts
+ * by date (default), most participants or most pictures.
  */
 export default function AnalyticsPage() {
-  const { events, getOrganizer } = useAdminStore();
-  const participants = events.reduce((n, e) => n + e.participants, 0);
-  const photos = events.reduce((n, e) => n + e.photoCount, 0);
+  const { events: allEvents, getOrganizer } = useAdminStore();
+  const [filter, setFilter] = useState<Filter>("all");
+  const count = (f: Filter) => (f === "all" ? allEvents.length : allEvents.filter((e) => eventGroup(e) === f).length);
+  const events = filter === "all" ? allEvents : allEvents.filter((e) => eventGroup(e) === filter);
+  const total = summarize(events);
   const byParticipants = topEvents(events, "participants");
   const byPhotos = topEvents(events, "photoCount");
   const [sort, setSort] = useState<SortKey>("date");
@@ -37,18 +51,30 @@ export default function AnalyticsPage() {
     <>
       <PageHeader title="Analytics" />
 
-      <div className={styles.stats}>
+      <div className={styles.tabs} role="tablist" aria-label="Which events">
+        {FILTERS.map((f) => (
+          <button key={f.key} type="button" role="tab" aria-selected={filter === f.key} onClick={() => setFilter(f.key)}>
+            {f.label} · {count(f.key)}
+          </button>
+        ))}
+      </div>
+
+      <div className={`${styles.stats} ${styles.stats4}`}>
         <div className={styles.stat}>
           <div className={styles.statLabel}>Events</div>
-          <div className={styles.statValue}>{events.length}</div>
+          <div className={styles.statValue}>{total.events}</div>
         </div>
         <div className={styles.stat}>
           <div className={styles.statLabel}>Participants</div>
-          <div className={styles.statValue}>{participants}</div>
+          <div className={styles.statValue}>{total.participants}</div>
         </div>
         <div className={styles.stat}>
           <div className={styles.statLabel}>Pictures uploaded</div>
-          <div className={styles.statValue}>{photos}</div>
+          <div className={styles.statValue}>{total.photos}</div>
+        </div>
+        <div className={styles.stat}>
+          <div className={styles.statLabel}>Pictures per event</div>
+          <div className={styles.statValue}>{total.photosPerEvent}</div>
         </div>
       </div>
 
@@ -72,7 +98,7 @@ export default function AnalyticsPage() {
           </label>
         </div>
         {perEvent.length === 0 ? (
-          <p className={styles.muted}>No events yet.</p>
+          <p className={styles.muted}>{filter === "all" ? "No events yet." : `No ${GROUP_LABEL[filter as EventGroup].toLowerCase()} events.`}</p>
         ) : (
           <div className={styles.tableWrap}>
             <table className={styles.table}>
@@ -93,9 +119,10 @@ export default function AnalyticsPage() {
                       <Link href={`/admin/events/${e.id}/gallery`} className={styles.tableLink}>
                         {e.name}
                       </Link>
+                      <span className={`${styles.groupTag} ${styles[`group_${eventGroup(e)}`]}`}>{GROUP_LABEL[eventGroup(e)]}</span>
                       <span className={styles.itemMeta} style={{ display: "block" }}>
                         {formatWhen(e.date, "")}
-                        {e.archived ? " · Archived" : e.status === "ENDED" ? " · Ended" : e.status === "LIVE" ? " · Live" : ""}
+                        
                       </span>
                     </td>
                     <td className={styles.colOrg}>{getOrganizer(e.organizerId)?.org ?? "—"}</td>

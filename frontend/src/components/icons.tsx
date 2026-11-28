@@ -160,12 +160,23 @@ export function ChartIcon({ size = 20 }: { size?: number }) {
 
 /** Four squares in a QR layout: QR code. */
 export function QrIcon({ size = 20 }: { size?: number }) {
+  // A real-looking QR code: three corner squares with solid centres and a few
+  // scattered dots, so it doesn't look like the Gallery grid icon.
   return (
     <svg {...base} width={size} height={size}>
-      <rect x="4" y="4" width="6" height="6" rx="1" />
-      <rect x="14" y="4" width="6" height="6" rx="1" />
-      <rect x="4" y="14" width="6" height="6" rx="1" />
-      <path d="M14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z" />
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <g fill="currentColor" stroke="none">
+        <rect x="5.5" y="5.5" width="2" height="2" rx="0.4" />
+        <rect x="16.5" y="5.5" width="2" height="2" rx="0.4" />
+        <rect x="5.5" y="16.5" width="2" height="2" rx="0.4" />
+        <rect x="13.5" y="13.5" width="2.6" height="2.6" rx="0.5" />
+        <rect x="18.4" y="13.5" width="2.6" height="2.6" rx="0.5" />
+        <rect x="16" y="16" width="2.6" height="2.6" rx="0.5" />
+        <rect x="13.5" y="18.4" width="2.6" height="2.6" rx="0.5" />
+        <rect x="18.4" y="18.4" width="2.6" height="2.6" rx="0.5" />
+      </g>
     </svg>
   );
 }
@@ -316,6 +327,26 @@ export function ExternalWindowIcon({ size = 18 }: { size?: number }) {
     <svg {...base} width={size} height={size}>
       <path d="M14 4h6v6M20 4l-8 8" />
       <path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+    </svg>
+  );
+}
+
+/** An eye: show / visible. */
+export function EyeIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+/** An eye with a line through it: hidden. */
+export function EyeOffIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <path d="M10.6 5.1A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.1 3.9M6.6 6.6C3.6 8.5 2 12 2 12s3.5 7 10 7c1.9 0 3.5-.5 4.9-1.3" />
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18" />
     </svg>
   );
 }

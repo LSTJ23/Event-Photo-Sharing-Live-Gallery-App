@@ -7,6 +7,7 @@
 //
 // Event ids match the organizer and participant mock data, so the admin's
 // Gallery and QR buttons open the same event pages.
+import { mainReason, sampleReports } from "./sampleReports";
 import { initialEvents, shade } from "./organizerData";
 
 export type AdminEventStatus = "LIVE" | "UPCOMING" | "ENDED";
@@ -59,6 +60,8 @@ export interface ReportEntry {
 export interface AdminReport {
   id: number;
   eventId: string;
+  /** The reported photo (matches the photo ids the API returns). */
+  photoId?: string;
   /** The most common reason. */
   reason: string;
   /** How many people reported the photo. */
@@ -73,6 +76,10 @@ export interface AdminReport {
   decidedAt?: string;
   /** "waiting": the organizer hasn't kept or removed it yet. */
   state: "waiting" | "kept" | "removed";
+  /** An admin deleted the photo (rather than the organizer). */
+  removedByAdmin?: boolean;
+  /** An admin kept the photo (rather than the organizer). */
+  decidedByAdmin?: boolean;
   shade: string;
 }
 
@@ -137,66 +144,47 @@ export type EventTab = "current" | "past" | "archived";
 /** Which Manage Events tab an event belongs on. */
 export const eventTab = (event: AdminEvent): EventTab => (!isPast(event) ? "current" : event.archived ? "archived" : "past");
 
+/** Groups for the Analytics filter: what's happening now, coming up, over, or put away. */
+export type EventGroup = "live" | "upcoming" | "past" | "archived";
+
+export function eventGroup(event: AdminEvent): EventGroup {
+  const tab = eventTab(event);
+  if (tab !== "current") return tab;
+  return event.status === "LIVE" ? "live" : "upcoming";
+}
+
+/** Totals for a set of events (the Analytics stat cards). */
+export function summarize(events: AdminEvent[]) {
+  const participants = events.reduce((n, e) => n + e.participants, 0);
+  const photos = events.reduce((n, e) => n + e.photoCount, 0);
+  return {
+    events: events.length,
+    participants,
+    photos,
+    /** Pictures per event, rounded to one decimal (0 when there are no events). */
+    photosPerEvent: events.length ? Math.round((photos / events.length) * 10) / 10 : 0
+  };
+}
+
 export const initialOrganizers: Organizer[] = [
   { id: "org-1", org: "Org 1", person: "Person 1", email: "person1@org1.example", status: "active" },
   { id: "org-2", org: "Org 2", person: "Person 2", email: "person2@org2.example", status: "active" },
   { id: "org-3", org: "Org 3", person: "Person 3", email: "person3@org3.example", status: "invited" }
 ];
 
-export const initialAdminReports: AdminReport[] = [
-  {
-    id: 1,
-    eventId: dlsu.id,
-    reason: "Inappropriate",
-    count: 3,
-    time: "2 h ago",
-    state: "waiting",
-    shade: shade(7),
-    sharedBy: "Anonymous",
-    entries: [
-      { by: "Participant 12", reason: "Inappropriate", time: "35 min ago" },
-      { by: "Anonymous", reason: "Inappropriate", time: "1 h ago" },
-      { by: "Participant 4", reason: "Spam", time: "2 h ago" }
-    ]
-  },
-  {
-    id: 2,
-    eventId: dlsu.id,
-    reason: "Not from this event",
-    count: 2,
-    time: "1 h ago",
-    state: "waiting",
-    shade: shade(23),
-    sharedBy: "Carlo Garcia",
-    entries: [
-      { by: "Participant 9", reason: "Not from this event", time: "40 min ago" },
-      { by: "Anonymous", reason: "Not from this event", time: "1 h ago" }
-    ]
-  },
-  {
-    id: 3,
-    eventId: dlsu.id,
-    reason: "I'm in it and want it removed",
-    count: 1,
-    time: "25 min ago",
-    state: "waiting",
-    shade: shade(31),
-    sharedBy: "Andrea Lim",
-    entries: [{ by: "Bea Cruz", reason: "I'm in it and want it removed", time: "25 min ago" }]
-  },
-  {
-    id: 4,
-    eventId: dlsu.id,
-    reason: "Spam",
-    count: 1,
-    time: "Yesterday",
-    state: "kept",
-    shade: shade(40),
-    sharedBy: "Paolo Reyes",
-    entries: [{ by: "Anonymous", reason: "Spam", time: "Yesterday" }],
-    decidedAt: "Yesterday"
-  }
-];
+export const initialAdminReports: AdminReport[] = sampleReports.map((r, i) => ({
+  id: i + 1,
+  eventId: r.eventId,
+  photoId: r.photoId,
+  reason: mainReason(r.entries),
+  count: r.entries.length,
+  time: r.time,
+  state: r.state,
+  shade: shade(r.shadeIndex),
+  sharedBy: r.sharedBy,
+  entries: r.entries,
+  decidedAt: r.decidedAt
+}));
 
 export function getStats(events: AdminEvent[], organizers: Organizer[]) {
   return {
@@ -374,4 +362,27 @@ export function needsAttention(events: AdminEvent[], organizers: Organizer[], re
       items.push({ kind: "invite", id: o.id, title: `${o.org} hasn't accepted their invite`, detail: `Sent to ${o.email}` });
   }
   return items;
+}
+
+/** Reports about one photo, newest decision last (for the admin gallery's flags). */
+export function reportsForPhoto(reports: AdminReport[], photoId: string): AdminReport[] {
+  return reports.filter((r) => r.photoId === photoId);
+}
+
+/** How many people reported the photo and are still waiting on the organizer. */
+export function openReportCount(reports: AdminReport[], photoId: string): number {
+  return reportsForPhoto(reports, photoId)
+    .filter((r) => r.state === "waiting")
+    .reduce((n, r) => n + r.count, 0);
+}
+
+/** Numbers for Report Logs: reported photos by what the organizer decided, and reports in total. */
+export function reportStats(reports: AdminReport[]) {
+  return {
+    waiting: reports.filter((r) => r.state === "waiting").length,
+    kept: reports.filter((r) => r.state === "kept").length,
+    removed: reports.filter((r) => r.state === "removed").length,
+    /** Every report (one photo can be reported by several people). */
+    totalReports: reports.reduce((n, r) => n + r.count, 0)
+  };
 }

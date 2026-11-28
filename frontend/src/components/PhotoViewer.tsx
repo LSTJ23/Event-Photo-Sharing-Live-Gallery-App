@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- photo URLs can be blob: or any storage host */
 
 import { useEffect, useState } from "react";
-import { ChevronLeftIcon, ChevronRightIcon, CloseIcon, DownloadIcon } from "./icons";
+import { ChevronLeftIcon, ChevronRightIcon, CloseIcon, DownloadIcon, TrashIcon } from "./icons";
 import { Modal } from "./Modal";
 import styles from "./admin.module.css";
 import { downloadPhoto } from "@/lib/downloadPhotos";
@@ -11,20 +11,30 @@ import type { Photo } from "@/lib/types";
 
 /**
  * Popup for one photo in the organizer's gallery: the photo big, who shared it
- * and when, "3 of 24", previous / next (arrow keys too) and Download.
+ * and when, "3 of 24", previous / next (arrow keys too), Download, and for
+ * admins Delete.
  */
 export function PhotoViewer({
   photos,
   index,
   eventName,
   onIndex,
-  onClose
+  onClose,
+  onDelete,
+  notice,
+  actions
 }: {
   photos: Photo[];
   index: number;
   eventName: string;
   onIndex: (index: number) => void;
   onClose: () => void;
+  /** Shows a Delete button (admins). The caller confirms and deletes. */
+  onDelete?: () => void;
+  /** Extra info about the photo, e.g. that it was reported. */
+  notice?: (photo: Photo) => React.ReactNode;
+  /** Extra buttons beside Download, e.g. Hide for admins. */
+  actions?: (photo: Photo) => React.ReactNode;
 }) {
   const [downloading, setDownloading] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -83,11 +93,20 @@ export function PhotoViewer({
           <p>
             Photo {index + 1} of {photos.length}
           </p>
+          {notice?.(photo)}
           {failed && <p className={styles.viewerError}>Couldn&apos;t download. Try again.</p>}
         </div>
-        <button type="button" className={styles.btn} onClick={download} disabled={downloading}>
-          <DownloadIcon /> {downloading ? "Downloading…" : "Download"}
-        </button>
+        <div className={styles.viewerActions}>
+          <button type="button" className={styles.btn} onClick={download} disabled={downloading}>
+            <DownloadIcon /> {downloading ? "Downloading…" : "Download"}
+          </button>
+          {actions?.(photo)}
+          {onDelete && (
+            <button type="button" className={`${styles.btn} ${styles.viewerDelete}`} onClick={onDelete}>
+              <TrashIcon /> Delete
+            </button>
+          )}
+        </div>
       </div>
     </Modal>
   );

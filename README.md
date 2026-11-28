@@ -188,7 +188,6 @@ Admin pages opened from another page carry `?from=<that page>`, so Back, Cancel 
 | `/admin` | Home: Needs your attention (reported photos waiting for an organizer, galleries nearly full, events with no start time, unaccepted invites), Create Event, Manage Events, Create User, Manage Users, and the Report Logs overview |
 | `/admin/events` | Manage Events: Current, Past events and Archived tabs, search. Current: Edit / Gallery / QR. Past and archived: Gallery, Download all photos, Archive / Restore, Delete |
 | `/admin/events/<id>/gallery` | The event's photos, inside the admin: Display gallery, QR code, share link, and select photos to delete |
-| `/admin/events/<id>/qr` | The event's QR code: copy the link or download the code |
 | `/admin/events/create` | Create Event: name, venue, organizer, photo capacity, and when it starts and ends (date and time each; hashtag optional) |
 | `/admin/events/<id>/edit` | Edit Event |
 | `/admin/users` | Manage Users: search, and Edit on each organizer |

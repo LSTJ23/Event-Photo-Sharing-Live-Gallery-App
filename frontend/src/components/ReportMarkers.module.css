@@ -1,0 +1,94 @@
+/* Red flag with the number of reports, top-right of a photo in a gallery. */
+.flag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #d92d20;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+  pointer-events: none;
+}
+
+/* "Reported by 2 people" in the photo popup. */
+.note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #fdecea;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.noteDone {
+  background: #f2f2f2;
+  color: #555;
+}
+
+.note a,
+.review {
+  margin-left: 4px;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.review {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Photo hidden from guests by an admin. */
+.hiddenBadge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgb(17 17 17 / 0.82);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.noteHidden {
+  background: #ececec;
+  color: #333;
+}
+
+/* Wrapper for several notes in the popup. */
+.notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.notes .note {
+  margin-top: 10px;
+}
+
+/* Dim a hidden photo in the gallery. */
+.dimmed {
+  opacity: 0.45;
+  filter: grayscale(0.4);
+}

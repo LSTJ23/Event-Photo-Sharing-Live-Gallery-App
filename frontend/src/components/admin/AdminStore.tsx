@@ -33,6 +33,10 @@ interface AdminStore {
   archiveEvent: (id: string) => void;
   restoreEvent: (id: string) => void;
   deleteEvent: (id: string) => void;
+  /** After an admin deletes a reported photo: its reports are marked Removed. */
+  photoRemoved: (eventId: string, photoId: string) => void;
+  /** An admin keeps a reported photo: the report is closed. */
+  keepReport: (reportId: number) => void;
 }
 
 const Context = createContext<AdminStore | null>(null);
@@ -133,6 +137,16 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
         setEvents((all) => all.filter((e) => e.id !== id));
         setReports((all) => all.filter((r) => r.eventId !== id));
         notify("Event deleted");
+      },
+      keepReport: (reportId) => {
+        setReports((all) => all.map((r) => (r.id === reportId ? { ...r, state: "kept", decidedByAdmin: true, decidedAt: "Just now" } : r)));
+        notify("Photo kept");
+      },
+      photoRemoved: (eventId, photoId) => {
+        setReports((all) =>
+          all.map((r) => (r.eventId === eventId && r.photoId === photoId ? { ...r, state: "removed", removedByAdmin: true, decidedAt: "Just now" } : r))
+        );
+        notify("Photo deleted");
       }
     };
   }, [events, organizers, reports, toast, notify]);
