@@ -5,8 +5,9 @@ import { createSupabaseAdminClient } from "./supabase.js";
 
 const port = Number(process.env.PORT ?? 3001);
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const auth = createSupabaseAuthService(createSupabaseAdminClient());
-const server = createApp(pool, undefined, { auth }).listen(port, () => {
+const supabase = createSupabaseAdminClient();
+const auth = createSupabaseAuthService(supabase);
+const server = createApp(pool, undefined, { auth, supabase }).listen(port, () => {
   console.log(`API listening ${port}`);
 });
 

@@ -29,7 +29,7 @@ function StatusPill({ status }: { status: AdminEvent["status"] }) {
  * events: Gallery, Download all photos, Archive or Restore, and Delete.
  */
 export default function ManageEventsPage() {
-  const { events, getOrganizer, notify, archiveEvent, restoreEvent, deleteEvent } = useAdminStore();
+  const { events, getOrganizer, notify, archiveEvent, restoreEvent, deleteEvent, loading, loadError } = useAdminStore();
   const from = useFrom();
   const here = useHere();
   // Opened from another page (e.g. the dashboard): links keep that, so Back finds its way home.
@@ -55,6 +55,8 @@ export default function ManageEventsPage() {
           </Link>
         }
       />
+      {loading && <p role="status">Loading events...</p>}
+      {loadError && <p className={styles.error} role="alert">{loadError}</p>}
 
       <div className={styles.toolbar}>
         <div className={styles.tabs} role="tablist" aria-label="Which events">
@@ -74,7 +76,7 @@ export default function ManageEventsPage() {
         </label>
       </div>
 
-      {shown.length === 0 ? (
+      {!loading && !loadError && (shown.length === 0 ? (
         <p className={styles.empty}>
           {query
             ? "No events match your search."
@@ -127,7 +129,7 @@ export default function ManageEventsPage() {
                       <Link href={to(`/admin/events/${e.id}/gallery`)} className={`${styles.btn} ${styles.small}`}>
                         Gallery
                       </Link>
-                      <button type="button" className={`${styles.btn} ${styles.small}`} onClick={() => setSharing(e)} disabled={!origin}>
+                      <button type="button" className={`${styles.btn} ${styles.small}`} onClick={() => setSharing(e)} disabled={!origin || e.shareLinkActive === false}>
                         Share
                       </button>
                     </div>
@@ -162,8 +164,8 @@ export default function ManageEventsPage() {
             );
           })}
         </div>
-      )}
-      {sharing && origin && <ShareLinkModal link={shareLinkFor(origin, sharing.id)} eventId={sharing.id} onClose={() => setSharing(null)} />}
+      ))}
+      {sharing && origin && <ShareLinkModal link={shareLinkFor(origin, sharing.shareSlug || sharing.id)} eventId={sharing.shareSlug || sharing.id} onClose={() => setSharing(null)} />}
       {archiving && (
         <ConfirmDialog
           title={`${archiving.restore ? "Restore" : "Archive"} ${archiving.event.name}?`}

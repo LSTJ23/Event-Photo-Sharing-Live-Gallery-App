@@ -111,7 +111,7 @@ export default function AdminHomePage() {
             Events
           </h2>
           <div className={styles.shortcuts}>
-            <Shortcut href={withFrom("/admin/events/create", "/admin")} icon={<PlusCircleIcon />} label="Create Event" hint="Set it up and invite an organizer" />
+            <Shortcut href={withFrom("/admin/events/create", "/admin")} icon={<PlusCircleIcon />} label="Create Event" hint="Set it up and assign an organizer" />
             <Shortcut href={withFrom("/admin/events", "/admin")} icon={<StarIcon />} label="Manage Events" hint={`${events.length} events`} light />
           </div>
         </section>

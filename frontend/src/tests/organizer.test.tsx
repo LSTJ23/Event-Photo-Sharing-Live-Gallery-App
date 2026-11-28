@@ -8,7 +8,7 @@
 // lib/organizerData.ts), so each test renders inside the real provider.
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const router = { push: vi.fn(), replace: vi.fn() };
 let routeParams: Record<string, string> = {};
@@ -241,6 +241,8 @@ describe("21.2 / 21.3 - EO views event analytics", () => {
 });
 
 describe("24.8 - photo capacity validation", () => {
+  beforeEach(() => vi.stubEnv("NEXT_PUBLIC_USE_MOCK_API", "true"));
+  afterEach(() => vi.unstubAllEnvs());
   function CapacityProbe() {
     const { getEvent } = useAdminStore();
     return <span data-testid="capacity">{getEvent("dlsu-cso-event")?.capacity}</span>;

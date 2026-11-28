@@ -8,14 +8,16 @@ import { useAdminStore } from "@/components/admin/AdminStore";
 import { EventFormView } from "@/components/admin/EventFormView";
 import styles from "@/components/admin/dashboard.module.css";
 
-/** Edit an event's details. Changing the organizer invites the new one. */
+/** Edit an event's details. */
 export default function EditEventPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { getEvent, updateEvent } = useAdminStore();
+  const { getEvent, updateEvent, loading, loadError } = useAdminStore();
   const event = getEvent(id);
   const back = useBackTo("/admin/events");
 
+  if (loading) return <p role="status">Loading event...</p>;
+  if (loadError) return <p role="alert">{loadError}</p>;
   if (!event) {
     return (
       <>
@@ -45,8 +47,8 @@ export default function EditEventPage() {
         minCapacity={Math.max(1, event.photoCount)}
         submitLabel="Save changes"
         cancelHref={back}
-        onSubmit={(form) => {
-          updateEvent(event.id, form);
+        onSubmit={async (form) => {
+          await updateEvent(event.id, form);
           router.push(back);
         }}
       />

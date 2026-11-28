@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   initialAdminEvents,
   initialAdminReports,
@@ -11,28 +11,29 @@ import {
   type Organizer,
   type UserForm
 } from "@/lib/adminData";
+import * as adminApi from "@/lib/adminApi";
 
-// TODO (backend): these actions only change this in-memory copy. Each needs an
-// API call, and the server must check the caller is an admin. Creating an
-// event should also email the chosen organizer an invite to it.
+// Organizer management and reports still use sample/in-memory data.
 
 interface AdminStore {
   events: AdminEvent[];
   organizers: Organizer[];
   reports: AdminReport[];
   toast: string;
+  loading: boolean;
+  loadError: string;
   notify: (message: string) => void;
   getEvent: (id: string) => AdminEvent | undefined;
   getOrganizer: (id: string) => Organizer | undefined;
-  createEvent: (form: EventForm) => void;
-  updateEvent: (id: string, form: EventForm) => void;
+  createEvent: (form: EventForm) => Promise<void>;
+  updateEvent: (id: string, form: EventForm) => Promise<void>;
   createOrganizer: (form: UserForm) => void;
   updateOrganizer: (id: string, form: UserForm) => void;
   resendInvite: (id: string) => void;
   /** Past events: tuck away, bring back, or delete for good. */
   archiveEvent: (id: string) => void;
   restoreEvent: (id: string) => void;
-  deleteEvent: (id: string) => void;
+  deleteEvent: (id: string) => Promise<void>;
   /** After an admin deletes a reported photo: its reports are marked Removed. */
   photoRemoved: (eventId: string, photoId: string) => void;
   /** An admin keeps a reported photo: the report is closed. */
@@ -47,30 +48,14 @@ export function useAdminStore(): AdminStore {
   return value;
 }
 
-const slug = (name: string) =>
-  name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "") || "event";
-
-const fromForm = (form: EventForm) => ({
-  name: form.name.trim(),
-  venue: form.venue.trim(),
-  organizerId: form.organizerId,
-  hashtag: form.hashtag.trim().replace(/^#/, ""),
-  capacity: Number(form.capacity),
-  date: form.date,
-  time: form.time,
-  endDate: form.endDate,
-  endTime: form.endTime
-});
-
-/** Keeps the admin dashboard's sample data in memory while you click around. */
 export function AdminStoreProvider({ children }: { children: React.ReactNode }) {
-  const [events, setEvents] = useState(initialAdminEvents);
-  const [organizers, setOrganizers] = useState(initialOrganizers);
+  const mockMode = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
+  const [events, setEvents] = useState<AdminEvent[]>(mockMode ? initialAdminEvents : []);
+  const [organizers, setOrganizers] = useState<Organizer[]>(mockMode ? initialOrganizers : []);
   const [reports, setReports] = useState(initialAdminReports);
   const [toast, setToast] = useState("");
+  const [loading, setLoading] = useState(!mockMode);
+  const [loadError, setLoadError] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const notify = useCallback((message: string) => {
@@ -79,6 +64,22 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
     timer.current = setTimeout(() => setToast(""), 2600);
   }, []);
 
+  useEffect(() => {
+    if (mockMode) return;
+    let active = true;
+    Promise.all([adminApi.listEvents(), adminApi.listOrganizers()])
+      .then(([loadedEvents, loadedOrganizers]) => {
+        if (!active) return;
+        setEvents(loadedEvents);
+        setOrganizers(loadedOrganizers);
+      })
+      .catch((error: unknown) => {
+        if (active) setLoadError(error instanceof Error ? error.message : "Could not load admin data.");
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [mockMode]);
+
   const value = useMemo<AdminStore>(() => {
     const getOrganizer = (id: string) => organizers.find((o) => o.id === id);
     return {
@@ -86,22 +87,28 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
       organizers,
       reports,
       toast,
+      loading,
+      loadError,
       notify,
       getEvent: (id) => events.find((e) => e.id === id),
       getOrganizer,
 
-      createEvent: (form) => {
-        let id = slug(form.name);
-        while (events.some((e) => e.id === id)) id = `${slug(form.name)}-${Math.floor(Math.random() * 1000)}`;
-        setEvents((all) => [...all, { id, ...fromForm(form), status: "UPCOMING", participants: 0, photoCount: 0, covers: [] }]);
-        const org = getOrganizer(form.organizerId);
-        notify(org ? `Event created. ${org.person} has been invited.` : "Event created");
+      createEvent: async (form) => {
+        if (mockMode) throw new Error("Event creation requires the real API. Disable mock mode.");
+        const event = await adminApi.createEvent(form);
+        setEvents((all) => [...all, event]);
+        notify("Event created. Email invitations are not yet available.");
       },
-      updateEvent: (id, form) => {
-        const before = events.find((e) => e.id === id);
-        setEvents((all) => all.map((e) => (e.id === id ? { ...e, ...fromForm(form) } : e)));
-        const org = getOrganizer(form.organizerId);
-        notify(before && org && before.organizerId !== form.organizerId ? `Saved. ${org.person} has been invited.` : "Changes saved");
+      updateEvent: async (id, form) => {
+        if (mockMode) {
+          setEvents((all) => all.map((event) => event.id === id ? {
+            ...event, ...form, name: form.name.trim(), venue: form.venue.trim(),
+            hashtag: form.hashtag.trim().replace(/^#/, ""), capacity: Number(form.capacity)
+          } : event));
+          notify("Demo changes saved in memory only.");
+          return;
+        }
+        throw new Error("Editing saved events is not available yet.");
       },
 
       createOrganizer: (form) => {
@@ -126,17 +133,29 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
         if (o) notify(`Invite sent again to ${o.email}`);
       },
       archiveEvent: (id) => {
-        setEvents((all) => all.map((e) => (e.id === id ? { ...e, archived: true } : e)));
-        notify("Event archived");
+        if (mockMode) {
+          setEvents((all) => all.map((event) => event.id === id ? { ...event, archived: true } : event));
+          notify("Demo event archived in memory only.");
+          return;
+        }
+        notify("Archiving saved events is not available yet.");
       },
       restoreEvent: (id) => {
-        setEvents((all) => all.map((e) => (e.id === id ? { ...e, archived: false } : e)));
-        notify("Event restored to Past events");
+        if (mockMode) {
+          setEvents((all) => all.map((event) => event.id === id ? { ...event, archived: false } : event));
+          notify("Demo event restored in memory only.");
+          return;
+        }
+        notify("Restoring saved events is not available yet.");
       },
-      deleteEvent: (id) => {
-        setEvents((all) => all.filter((e) => e.id !== id));
-        setReports((all) => all.filter((r) => r.eventId !== id));
-        notify("Event deleted");
+      deleteEvent: async (id) => {
+        if (mockMode) {
+          setEvents((all) => all.filter((event) => event.id !== id));
+          setReports((all) => all.filter((report) => report.eventId !== id));
+          notify("Demo event deleted in memory only.");
+          return;
+        }
+        notify("Deleting saved events is not available yet.");
       },
       keepReport: (reportId) => {
         setReports((all) => all.map((r) => (r.id === reportId ? { ...r, state: "kept", decidedByAdmin: true, decidedAt: "Just now" } : r)));
@@ -149,7 +168,7 @@ export function AdminStoreProvider({ children }: { children: React.ReactNode }) 
         notify("Photo deleted");
       }
     };
-  }, [events, organizers, reports, toast, notify]);
+  }, [events, organizers, reports, toast, notify, loading, loadError, mockMode]);
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

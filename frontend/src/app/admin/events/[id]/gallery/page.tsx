@@ -34,7 +34,7 @@ import { shareLinkFor } from "@/lib/shareLink";
  */
 export default function AdminGalleryPage() {
   const { id } = useParams<{ id: string }>();
-  const { getEvent, getOrganizer, notify, reports, keepReport } = useAdminStore();
+  const { getEvent, getOrganizer, notify, reports, keepReport, loading, loadError } = useAdminStore();
   const origin = useOrigin();
   const photos = usePhotos(id, 5000, true);
   const [sharing, setSharing] = useState(false);
@@ -55,6 +55,8 @@ export default function AdminGalleryPage() {
   const back = useBackTo("/admin/events");
   const here = useHere();
 
+  if (loading) return <p role="status">Loading event...</p>;
+  if (loadError) return <p role="alert">{loadError}</p>;
   if (!event) return <PageHeader title="Event not found" back={back} subtitle="It may have been deleted, or the link is wrong." />;
 
   const org = getOrganizer(event.organizerId);
@@ -312,7 +314,7 @@ export default function AdminGalleryPage() {
             setDeletingOne(null);
           }} />
       )}
-      {sharing && origin && <ShareLinkModal link={shareLinkFor(origin, event.id)} eventId={event.id} onClose={() => setSharing(false)} />}
+      {sharing && origin && <ShareLinkModal link={shareLinkFor(origin, event.shareSlug || event.id)} eventId={event.shareSlug || event.id} onClose={() => setSharing(false)} />}
     </>
   );
 }

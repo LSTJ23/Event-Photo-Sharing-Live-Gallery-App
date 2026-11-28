@@ -71,7 +71,7 @@ Application tables and analytics views are restricted to the backend's
 photo rows through Realtime. The login API verifies Supabase Auth sessions,
 accepts anonymous sessions only for event participants, and resolves event links
 by `share_slug`.
-Photo and dashboard APIs are not implemented yet. When added, they must verify
+Photo and most dashboard APIs are not implemented yet. When added, they must verify
 the session, enforce roles and event membership, use the session's user ID
 rather than a client-supplied identity, omit participant identity from anonymous
 public responses, and provide signed photo URLs.
@@ -95,7 +95,7 @@ test also uses `DATABASE_URL`. Neither health check verifies the login flow.
 Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in
 `frontend/.env.local` to the same Supabase project. Set `AUTH_BACKEND_URL` to
 the Express API's server-reachable URL; it defaults to `http://localhost:3001`
-for local development. Next.js proxies `/api/auth/*` requests to that API.
+for local development. Next.js proxies `/api/auth/*` and `/api/admin/*` requests to that API.
 Set the environment variables for both deployed services as well.
 
 Enable anonymous sign-ins in Supabase Auth and apply the guest attendance
@@ -119,9 +119,18 @@ Staff use their
 Supabase email and password; their role is read from `staff_users`, not trusted
 from the selected role. Sessions are held and refreshed by Supabase's browser
 client. The API verifies bearer tokens and checks membership or staff status.
-The photo and dashboard screens still use mock data, and mock-created events
-are not real Supabase events; use an active database event's `share_slug` to
-test participant login. Do not use production accounts or events for testing.
+Admin event creation and the event list use the database. Only active admins
+who have changed their password can use the API, and an event must be assigned
+to an existing active organizer in `staff_users`. The browser converts selected
+local dates and times to UTC; the database generates the event UUID and public
+share slug. Failed requests are shown in the form and are not saved in memory.
+Event organizer invitations are not sent; provision organizers separately.
+Event editing, archiving, restoration, and deletion are not yet implemented.
+Organizer management, reports, and photo/gallery screens still use mock data.
+Do not use production accounts or events for testing.
+Set `NEXT_PUBLIC_USE_MOCK_API` to `false` or leave it unset to use admin event
+creation. When explicitly set to `true`, the admin dashboard displays sample
+events and creation is disabled; demo edits only affect memory.
 
 The guest attendance migration backfills email from existing Auth users and
 fails if any existing participant lacks an email or if two records in one event

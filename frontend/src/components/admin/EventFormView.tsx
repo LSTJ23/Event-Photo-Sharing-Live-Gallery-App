@@ -12,7 +12,7 @@ export const emptyEventForm: EventForm = { name: "", venue: "", organizerId: "",
 
 /**
  * The event form used by Create Event and Edit Event: details on the left,
- * date and time on the right. The chosen organizer is invited to the event.
+ * date and time on the right.
  */
 export function EventFormView({
   initial,
@@ -26,12 +26,14 @@ export function EventFormView({
   cancelHref: string;
   /** Photos already shared; the limit can't go below this. */
   minCapacity?: number;
-  onSubmit: (form: EventForm) => void;
+  onSubmit: (form: EventForm) => void | Promise<void>;
 }) {
-  const { organizers } = useAdminStore();
+  const { organizers, loading, loadError } = useAdminStore();
   const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState<FormErrors<EventForm>>({});
   const [tried, setTried] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const setMany = (change: Partial<EventForm>) => {
     const next = { ...form, ...change };
@@ -68,13 +70,25 @@ export function EventFormView({
     <form
       className={styles.card}
       noValidate
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
+        if (submitting || loading || loadError) return;
         const found = eventFormErrors(form, minCapacity);
         setErrors(found);
         setTried(true);
-        if (Object.keys(found).length === 0) onSubmit(form);
-        else document.getElementById(`f-${Object.keys(found)[0]}`)?.focus();
+        if (Object.keys(found).length > 0) {
+          document.getElementById(`f-${Object.keys(found)[0]}`)?.focus();
+          return;
+        }
+        setSubmitting(true);
+        setSubmitError("");
+        try {
+          await onSubmit(form);
+        } catch (error) {
+          setSubmitError(error instanceof Error ? error.message : "Could not save event.");
+        } finally {
+          setSubmitting(false);
+        }
       }}
     >
       <div className={styles.formLayout}>
@@ -96,7 +110,7 @@ export function EventFormView({
               onChange={(e) => set("organizerId", e.target.value)}
             >
               <option value="">Choose an organizer</option>
-              {organizers.map((o) => (
+              {organizers.filter((o) => o.status === "active").map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.org} ({o.person})
                 </option>
@@ -185,11 +199,12 @@ export function EventFormView({
       </div>
 
       <div className={styles.formFoot}>
+        {(submitError || loadError) && <p className={styles.error} role="alert">{submitError || loadError}</p>}
         <Link href={cancelHref} className={styles.btn}>
           Cancel
         </Link>
-        <button type="submit" className={styles.btnDark}>
-          {submitLabel}
+        <button type="submit" className={styles.btnDark} disabled={loading || !!loadError || submitting}>
+          {submitting ? "Saving..." : submitLabel}
         </button>
       </div>
     </form>

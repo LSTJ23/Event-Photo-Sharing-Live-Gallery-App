@@ -1,6 +1,8 @@
 import express from "express";
 import { createAuthHandlers, type AuthService } from "./controllers/authController.js";
+import { createEventHandlers } from "./controllers/eventController.js";
 import { checkSupabaseDatabase } from "./supabase.js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface Database {
   query(sql: string): Promise<unknown>;
@@ -8,6 +10,7 @@ export interface Database {
 
 export interface AppServices {
   auth?: AuthService;
+  supabase?: SupabaseClient;
 }
 
 export function createApp(
@@ -45,6 +48,13 @@ export function createApp(
     app.get("/api/auth/me", auth.me);
     app.post("/api/auth/password", auth.changePassword);
     app.get("/api/auth/events/:eventId", auth.event);
+  }
+
+  if (services.supabase && services.auth) {
+    const events = createEventHandlers(services.supabase, services.auth);
+    app.post("/api/admin/events", events.createEvent);
+    app.get("/api/admin/events", events.listEvents);
+    app.get("/api/admin/organizers", events.organizers);
   }
 
   return app;

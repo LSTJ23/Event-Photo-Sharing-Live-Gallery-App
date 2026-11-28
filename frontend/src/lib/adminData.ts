@@ -37,6 +37,9 @@ export interface AdminEvent {
   covers: string[];
   /** Archived past events are tucked away under Manage Events → Archived. */
   archived?: boolean;
+  /** Public link identifier for persisted events. */
+  shareSlug?: string;
+  shareLinkActive?: boolean;
 }
 
 export type OrganizerStatus = "active" | "invited";
