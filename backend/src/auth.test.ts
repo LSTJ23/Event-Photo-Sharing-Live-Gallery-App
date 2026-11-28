@@ -7,8 +7,7 @@ const user = { id: "staff-1", name: "Alex", email: "alex@example.com", role: "or
 const result = { user, session: { accessToken: "access-token", refreshToken: "refresh-token" } };
 const auth: AuthService = {
   signIn: vi.fn(),
-  requestCode: vi.fn(),
-  verifyCode: vi.fn(),
+  joinEvent: vi.fn(),
   currentUser: vi.fn(),
   changePassword: vi.fn(),
   event: vi.fn()
@@ -40,21 +39,17 @@ describe("authentication API", () => {
     expect(response.body.error).toBe("Invalid email or password.");
   });
 
-  it("requires event context to request and verify a code", async () => {
-    expect((await request(app).post("/api/auth/code").send({ email: "a@example.com" })).status).toBe(400);
-    expect((await request(app).post("/api/auth/verify").send({ email: "a@example.com", code: "123456", name: "A" })).status).toBe(400);
-    expect(auth.requestCode).not.toHaveBeenCalled();
-    expect(auth.verifyCode).not.toHaveBeenCalled();
+  it("requires a valid email, name, and event to join", async () => {
+    expect((await request(app).post("/api/auth/join").send({ email: "a@example.com", name: "A" })).status).toBe(400);
+    expect((await request(app).post("/api/auth/join").send({ email: "invalid", name: "A", eventId: "event" })).status).toBe(400);
+    expect(auth.joinEvent).not.toHaveBeenCalled();
   });
 
-  it("sends a code and verifies participant details", async () => {
-    vi.mocked(auth.verifyCode).mockResolvedValue(result);
-    const sent = await request(app).post("/api/auth/code").send({ email: " A@EXAMPLE.COM ", eventId: "event" });
-    expect(sent.status).toBe(200);
-    expect(auth.requestCode).toHaveBeenCalledWith("a@example.com", "event");
-    const verified = await request(app).post("/api/auth/verify").send({ email: "a@example.com", code: "123456", name: " Alex ", eventId: "event" });
-    expect(verified.body).toEqual(result);
-    expect(auth.verifyCode).toHaveBeenCalledWith("a@example.com", "123456", "Alex", "event");
+  it("normalizes participant details and returns a session", async () => {
+    vi.mocked(auth.joinEvent).mockResolvedValue(result);
+    const joined = await request(app).post("/api/auth/join").send({ email: " A@EXAMPLE.COM ", name: " Alex ", eventId: "event" });
+    expect(joined.body).toEqual(result);
+    expect(auth.joinEvent).toHaveBeenCalledWith("a@example.com", "Alex", "event");
   });
 
   it("requires a bearer token for session checks and password changes", async () => {
@@ -78,9 +73,9 @@ describe("authentication API", () => {
   });
 
   it("returns errors from the auth service without issuing a session", async () => {
-    vi.mocked(auth.verifyCode).mockRejectedValue(new AuthError(401, "Invalid or expired verification code."));
-    const response = await request(app).post("/api/auth/verify").send({ email: "a@example.com", code: "bad", name: "A", eventId: "event" });
-    expect(response.status).toBe(401);
+    vi.mocked(auth.joinEvent).mockRejectedValue(new AuthError(404, "This event link is unavailable."));
+    const response = await request(app).post("/api/auth/join").send({ email: "a@example.com", name: "A", eventId: "event" });
+    expect(response.status).toBe(404);
     expect(response.body).not.toHaveProperty("session");
   });
 });

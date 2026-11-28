@@ -55,20 +55,22 @@ database, and deploy it separately with the Supabase CLI. Do not edit an
 already-applied migration. Follow the
 [Supabase migration guide](https://supabase.com/docs/guides/deployment/database-migrations).
 
-The schema stores staff and event participants against Supabase Auth users.
+The schema stores staff and event attendance, with Supabase Auth sessions for both.
 Participants must sign in before uploading; anonymous sharing hides their name
 from the gallery, but still records the participant internally. Report reasons
 are fixed options, with a nonblank description required for `other`.
 Photo files go in the private `event-photos` bucket. If the bucket already
 exists, the script preserves its visibility setting and Storage policies:
 verify that it is private and its policies do not expose photos.
-Participant records restrict deletion of their Auth account until those records
-are removed or otherwise handled.
+Legacy verified participant records restrict deletion of their Auth account until
+those records are removed or otherwise handled. Guest sessions are linked
+separately to attendance records.
 
 Application tables and analytics views are restricted to the backend's
 `service_role`; browser clients cannot read them directly or subscribe to
 photo rows through Realtime. The login API verifies Supabase Auth sessions,
-rejects anonymous Auth sessions, and resolves event links by `share_slug`.
+accepts anonymous sessions only for event participants, and resolves event links
+by `share_slug`.
 Photo and dashboard APIs are not implemented yet. When added, they must verify
 the session, enforce roles and event membership, use the session's user ID
 rather than a client-supplied identity, omit participant identity from anonymous
@@ -96,22 +98,37 @@ the Express API's server-reachable URL; it defaults to `http://localhost:3001`
 for local development. Next.js proxies `/api/auth/*` requests to that API.
 Set the environment variables for both deployed services as well.
 
-Enable the Supabase email provider and configure email delivery. The **Confirm
-signup** and **Magic Link** email templates must include `{{ .Token }}` so
-participants can enter the one-time code in the portal. Supabase's email and
-verification rate limits apply; configure production SMTP and appropriate
-gateway rate limits. An administrator must provision staff in Supabase Auth
+Enable anonymous sign-ins in Supabase Auth and apply the guest attendance
+migration before deploying the new participant flow. This enables anonymous
+Auth accounts project-wide; review existing RLS policies and add abuse prevention
+and rate limits before production use. Guest sign-ins are created by the backend,
+so Supabase's per-IP anonymous sign-in limit applies to the backend's egress IP
+across all participants. The flow does not currently support CAPTCHA challenges.
+Every join creates a guest Auth user, including repeat visits; plan retention and
+cleanup of inactive guest accounts without deleting attendance. Plan capacity and
+abuse controls accordingly. An administrator must provision staff in Supabase Auth
 and create a corresponding active `staff_users` row. Staff with
 `must_change_password` set are required to change their password after login.
 
-Participants open an active event's `/e/<share_slug>` link, request an email
-code, and verify it to create or update their membership. Staff use their
+Participants open an active event's `/e/<share_slug>` link and enter their name
+and email without verification. Attendance is matched by normalized email and
+event, including across devices; returning guests retain the original name. Anyone
+can claim another person's email, so neither identity nor attendance is verified.
+Do not use this flow where verified attendance or participant ownership is required.
+Staff use their
 Supabase email and password; their role is read from `staff_users`, not trusted
 from the selected role. Sessions are held and refreshed by Supabase's browser
 client. The API verifies bearer tokens and checks membership or staff status.
 The photo and dashboard screens still use mock data, and mock-created events
 are not real Supabase events; use an active database event's `share_slug` to
 test participant login. Do not use production accounts or events for testing.
+
+The guest attendance migration backfills email from existing Auth users and
+fails if any existing participant lacks an email or if two records in one event
+have the same normalized email. Resolve such data issues before applying it;
+do not discard existing attendance or photos. Deploy the migration, Supabase
+anonymous Auth setting, backend, and frontend together; the new frontend uses
+the new `/api/auth/join` endpoint rather than the old code-verification endpoints.
 
 The second migration enables `pg_cron` and schedules `refresh_event_statuses()`
 every minute. Supabase migrations require appropriate administrative access;
@@ -120,7 +137,9 @@ the application Data API key alone is not a migration credential.
 For schema checks, use a **disposable local PostgreSQL cluster**, not a Supabase
 project or an existing shared database. Apply `supabase/schema.test.setup.sql`,
 then `supabase/migrations/20261122150000_initial_schema.sql`, then
-`supabase/schema.test.sql` using `psql` with `-v ON_ERROR_STOP=1 -f <file>`.
+`supabase/schema.test.sql`, `supabase/guest-attendance.setup.sql`,
+`supabase/migrations/20261128120000_unverified_participant_attendance.sql`, and
+`supabase/guest-attendance.test.sql` using `psql` with `-v ON_ERROR_STOP=1 -f <file>`.
 The first file creates minimal local Auth and Storage stubs and database roles;
 the last rolls back its test data. These stubs do not test the `pg_cron` job.
 
